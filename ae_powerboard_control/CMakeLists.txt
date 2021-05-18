@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(ae_powerboard_control)
 
+## Link tomsense linux driver
+add_subdirectory(modules/STM_Jetson_I2C_driver)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -114,8 +117,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  modules/STM_Jetson_I2C_driver/include
 )
 
 ## Declare a C++ library
@@ -132,6 +136,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/ae_powerboard_control_node.cpp)
+add_executable(control_node src/control_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -147,6 +152,7 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(control_node ${catkin_LIBRARIES} i2c_driver pb6s40a_control)
 
 #############
 ## Install ##

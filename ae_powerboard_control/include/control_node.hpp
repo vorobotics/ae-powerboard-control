@@ -6,7 +6,8 @@
 #include "i2c_driver.h" 
 #include "pb6s40a_control.h"
 
-#define DEVICE_I2C "/dev/i2c-1"
+#define DEVICE_I2C_NANO "/dev/i2c-1"
+#define DEVICE_I2C_NX "/dev/i2c-8"
 class Control
 {
     private:
@@ -14,7 +15,8 @@ class Control
         // ros node
         ros::NodeHandle nh_;
         //i2c
-        I2CDriver i2c1_driver_;
+        I2CDriver i2c_driver_;
+        bool i2c_error_;
         Pb6s40aDroneControl *drone_control_;
         Pb6s40aDroneControl *led_control_;
 
@@ -25,6 +27,9 @@ class Control
         // i2c
         void OpenI2C();
         void CloseI2C();
+        //Esc
+        void GetEscDataLog();
+        void GetDeviceInfo();
     
     public:
         // constructor

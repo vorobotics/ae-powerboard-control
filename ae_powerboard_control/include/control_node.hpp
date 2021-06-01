@@ -14,6 +14,8 @@ class Control
         //  ******* properties ********
         // ros node
         ros::NodeHandle nh_;
+        // ros servers
+        ros::ServiceServer dev_info_srv_;
         //i2c
         I2CDriver i2c_driver_;
         bool i2c_error_;
@@ -24,16 +26,19 @@ class Control
         // init
         void Init();
         void DefaultValues();
+        void SetupServices();
         // i2c
         void OpenI2C();
         void CloseI2C();
         //Esc
+        void GetEscErrorLog();
         void GetEscDataLog();
         void GetDeviceInfo();
     
     public:
         // constructor
         Control(const ros::NodeHandle &nh);
+        ~Control();
 };
 
 #endif //CONTROL_NODE_HPP

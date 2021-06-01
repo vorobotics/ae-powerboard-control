@@ -4,6 +4,13 @@ Control::Control(const ros::NodeHandle &nh)
     :nh_(nh)
 {
     this->Init();
+    this->SetupServices();
+}
+
+Control::~Control()
+{
+    drone_control_ = NULL;
+    delete drone_control_;
 }
 
 void Control::Init()
@@ -18,7 +25,12 @@ void Control::Init()
 void Control::DefaultValues()
 {
     drone_control_ = new Pb6s40aDroneControl(i2c_driver_);
-    
+}
+
+void Control::SetupServices()
+{
+    //servers
+    // dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackDevInfo, this);
 }
 
 void Control::OpenI2C()
@@ -33,6 +45,26 @@ void Control::OpenI2C()
     }
 }
 
+void Control::GetEscErrorLog()
+{
+    if(i2c_error_)
+    {
+        return;
+    }
+    ERROR_WARN_LOG esc_error_logs[4] = {ERROR_WARN_LOG_INIT, ERROR_WARN_LOG_INIT, ERROR_WARN_LOG_INIT, ERROR_WARN_LOG_INIT};
+    uint8_t status = 0;
+    status = drone_control_->EscGetErrorLogs(&esc_error_logs[0],esc1);
+    status = drone_control_->EscGetErrorLogs(&esc_error_logs[1],esc2);
+    status = drone_control_->EscGetErrorLogs(&esc_error_logs[2],esc3);
+    status = drone_control_->EscGetErrorLogs(&esc_error_logs[3],esc4);
+    for (int i = 0; i < 4; i++)
+    {
+        ROS_INFO("Status: %d, Last E: %d W: %d, Prev E: %d W: %d, All E: %d W: %d", esc_error_logs[i].Diagnostic_status,
+        esc_error_logs[i].Last.Error, esc_error_logs[i].Last.Warn, esc_error_logs[i].Prev.Error, esc_error_logs[i].Prev.Warn,
+        esc_error_logs[i].All.Error, esc_error_logs[i].All.Warn);
+    }
+}
+
 void Control::GetEscDataLog()
 {
     if(i2c_error_)
@@ -41,10 +73,10 @@ void Control::GetEscDataLog()
     }
     RUN_DATA_Struct esc_data_logs[4];
     uint8_t status = 0;
-    status= drone_control_->EscGetDataLogs(&esc_data_logs[0],esc1);      
-    status= drone_control_->EscGetDataLogs(&esc_data_logs[1],esc2);      
-    status= drone_control_->EscGetDataLogs(&esc_data_logs[2],esc3);      
-    status= drone_control_->EscGetDataLogs(&esc_data_logs[3],esc4);
+    status = drone_control_->EscGetDataLogs(&esc_data_logs[0],esc1);      
+    status = drone_control_->EscGetDataLogs(&esc_data_logs[1],esc2);      
+    status = drone_control_->EscGetDataLogs(&esc_data_logs[2],esc3);      
+    status = drone_control_->EscGetDataLogs(&esc_data_logs[3],esc4);
     for (int i = 0; i < 4; i++)
     {
         ROS_INFO("Status: %d, Is_max: %d, Is_avg: %d, Esc_temp_max: %d, Motor_temp_max: %d", esc_data_logs[i].Diagnostic_status,
@@ -61,10 +93,10 @@ void Control::GetDeviceInfo()
     }
     ADB_DEVICE_INFO esc_device_infos[4];
     uint8_t status = 0;
-    status= drone_control_->EscGetDeviceInfo(&esc_device_infos[0],esc1); 
-    status= drone_control_->EscGetDeviceInfo(&esc_device_infos[1],esc2);
-    status= drone_control_->EscGetDeviceInfo(&esc_device_infos[2],esc3);
-    status= drone_control_->EscGetDeviceInfo(&esc_device_infos[3],esc4);
+    status = drone_control_->EscGetDeviceInfo(&esc_device_infos[0],esc1); 
+    status = drone_control_->EscGetDeviceInfo(&esc_device_infos[1],esc2);
+    status = drone_control_->EscGetDeviceInfo(&esc_device_infos[2],esc3);
+    status = drone_control_->EscGetDeviceInfo(&esc_device_infos[3],esc4);
     for (int i = 0; i < 4; i++)
     {
         ROS_INFO("Status: %d, Fw: %d.%d.%d, Address: %d, Hw build: %d, Sn: %d", esc_device_infos[i].Diagnostic_status,

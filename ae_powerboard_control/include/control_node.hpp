@@ -3,6 +3,7 @@
 
 #include "ros/ros.h"
 
+#include "utils.hpp"
 #include "i2c_driver.h" 
 #include "pb6s40a_control.h"
 

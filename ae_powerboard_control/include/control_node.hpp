@@ -34,7 +34,9 @@ class Control
         //Esc
         void GetEscErrorLog();
         void GetEscDataLog();
-        void GetDeviceInfo();
+        void GetEscDeviceInfo();
+        //Board
+        void GetBoardDeviceInfo();
     
     public:
         // constructor

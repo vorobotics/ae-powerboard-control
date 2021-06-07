@@ -61,7 +61,7 @@ void Control::GetEscErrorLog()
     status = drone_control_->EscGetErrorLogs(&esc_error_logs[3],esc4);
     for (int i = 0; i < 4; i++)
     {
-        ROS_INFO("ESC ERROR - Status: %u, Last E: %x W: %x, Prev E: %x W: %x, All E: %x W: %x", esc_error_logs[i].Diagnostic_status,
+        ROS_INFO("ESC ERROR - Status: %u, Last E: 0x%x W: 0x%x, Prev E: 0x%x W: 0x%x, All E: 0x%x W: 0x%x", esc_error_logs[i].Diagnostic_status,
         esc_error_logs[i].Last.Error, esc_error_logs[i].Last.Warn, esc_error_logs[i].Prev.Error, esc_error_logs[i].Prev.Warn,
         esc_error_logs[i].All.Error, esc_error_logs[i].All.Warn);
     }

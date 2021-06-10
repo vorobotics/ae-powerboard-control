@@ -41,14 +41,14 @@ bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Req
     {
         ae_powerboard_control::EscDeviceInfo dev_info;
         dev_info.esc_number = esc1 + i;
-        dev_info.hw_build = esc_device_infos_[i].hw_build;
-        dev_info.serial_number = esc_device_infos_[i].serial_number;
-        dev_info.diagnostic_status = esc_device_infos_[i].Diagnostic_status;
-        dev_info.address = esc_device_infos_[i].device_address;
-        dev_info.test = esc_device_infos_[i].hw_build & 0x01;
-        dev_info.fw_version.high = esc_device_infos_[i].fw_number.major;
-        dev_info.fw_version.mid = esc_device_infos_[i].fw_number.mid;
-        dev_info.fw_version.low = esc_device_infos_[i].fw_number.minor;
+        dev_info.hw_build = esc_device_info_[i].hw_build;
+        dev_info.serial_number = esc_device_info_[i].serial_number;
+        dev_info.diagnostic_status = esc_device_info_[i].Diagnostic_status;
+        dev_info.address = esc_device_info_[i].device_address;
+        dev_info.test = esc_device_info_[i].hw_build & 0x01;
+        dev_info.fw_version.high = esc_device_info_[i].fw_number.major;
+        dev_info.fw_version.mid = esc_device_info_[i].fw_number.mid;
+        dev_info.fw_version.low = esc_device_info_[i].fw_number.minor;
         dev_info.valid = esc_device_info_status_ & (1 << i);
         res.devices_info.push_back(dev_info);
     }
@@ -61,14 +61,14 @@ bool Control::CallbackEscErrorLog(ae_powerboard_control::GetEscErrorLog::Request
     {
         ae_powerboard_control::EscErrorLog error_log;
         error_log.esc_number = esc1 + i;
-        error_log.diagnostic_status = esc_error_logs_[i].Diagnostic_status;
+        error_log.diagnostic_status = esc_error_log_[i].Diagnostic_status;
         error_log.valid = esc_error_log_status_ & (1 << i);
-        error_log.last.error = esc_error_logs_[i].Last.Error;
-        error_log.last.warning = esc_error_logs_[i].Last.Warn;
-        error_log.previous.error = esc_error_logs_[i].Prev.Error;
-        error_log.previous.warning = esc_error_logs_[i].Prev.Warn;
-        error_log.all.error = esc_error_logs_[i].All.Error;
-        error_log.all.warning = esc_error_logs_[i].All.Warn;
+        error_log.last.error = esc_error_log_[i].Last.Error;
+        error_log.last.warning = esc_error_log_[i].Last.Warn;
+        error_log.previous.error = esc_error_log_[i].Prev.Error;
+        error_log.previous.warning = esc_error_log_[i].Prev.Warn;
+        error_log.all.error = esc_error_log_[i].All.Error;
+        error_log.all.warning = esc_error_log_[i].All.Warn;
         res.error_log.push_back(error_log);
     }
     return true;
@@ -132,7 +132,7 @@ void Control::GetEscErrorLog()
             ROS_INFO("ESC%d ERROR LOG - Status: %u, Last E: 0x%x W: 0x%x, Prev E: 0x%x W: 0x%x, All E: 0x%x W: 0x%x", (esc1 + i),  
                 er_log.Diagnostic_status, er_log.Last.Error, er_log.Last.Warn, er_log.Prev.Error, er_log.Prev.Warn,
                 er_log.All.Error, er_log.All.Warn);
-            esc_error_logs_[i] = er_log;
+            esc_error_log_[i] = er_log;
             esc_error_log_status_ |= (1 << i);
         }
     }
@@ -178,14 +178,14 @@ void Control::GetEscDeviceInfo()
         ADB_DEVICE_INFO dev_info;
         if(drone_control_->EscGetDeviceInfo(&dev_info, (esc1 + i)))
         {
-            ROS_INFO("ESC%d INFO - - problem reading data", (esc1 + i));
+            ROS_INFO("ESC%d INFO - problem reading data", (esc1 + i));
         }
         else
         {
             ROS_INFO("ESC%d INFO - Status: %u, Fw: %u.%u.%u, Address: %u, Hw build: %u, Sn: %u", (esc1 + i), dev_info.Diagnostic_status,
                 dev_info.fw_number.major, dev_info.fw_number.mid, dev_info.fw_number.minor, dev_info.device_address,
                 dev_info.hw_build, dev_info.serial_number);
-            esc_device_infos_[i] = dev_info;
+            esc_device_info_[i] = dev_info;
             esc_device_info_status_ |= (1 << i);
         }
     }
@@ -193,16 +193,24 @@ void Control::GetEscDeviceInfo()
 
 void Control::GetBoardDeviceInfo()
 {
+    board_device_info_status_ = false;
     if(i2c_error_)
     {
         return;
     }
-    POWER_BOARD_INFO power_board_info;
-    uint8_t status = 0;
-    status = drone_control_->PowerBoardInfoGet(&power_board_info);
-
-    ROS_INFO("BOARD INFO - Status: %u, Fw: %u.%u.%u, Hw build: %u, Sn: %u", status, power_board_info.fw_number.major,
-    power_board_info.fw_number.mid, power_board_info.fw_number.minor, power_board_info.hw_build, power_board_info.serial_number);
+    
+    POWER_BOARD_INFO dev_info;
+    if(drone_control_->PowerBoardInfoGet(&dev_info))
+    {
+        ROS_INFO("BOARD INFO - problem reading data");
+    }
+    else
+    {
+        ROS_INFO("BOARD INFO - Fw: %u.%u.%u, Hw build: %u, Sn: %u", dev_info.fw_number.major, dev_info.fw_number.mid, 
+          dev_info.fw_number.minor, dev_info.hw_build, dev_info.serial_number);
+        board_device_info_ = dev_info;
+        board_device_info_status_ = false;
+    }
 }
 
 void Control::CloseI2C()

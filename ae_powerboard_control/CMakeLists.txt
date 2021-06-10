@@ -56,6 +56,7 @@ add_message_files(
   ErrorWarn.msg
   EscErrorLog.msg
   EscDataLog.msg
+  BoardDeviceInfo.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -64,6 +65,7 @@ add_service_files(
   GetEscDeviceInfo.srv
   GetEscErrorLog.srv
   GetEscDataLog.srv
+  GetBoardDeviceInfo.srv
 )
 
 ## Generate actions in the 'action' folder

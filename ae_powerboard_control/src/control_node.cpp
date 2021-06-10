@@ -33,6 +33,7 @@ void Control::SetupServices()
     esc_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackEscDeviceInfo, this);
     esc_error_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_error_log", &Control::CallbackEscErrorLog, this);
     esc_data_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_data_log", &Control::CallbackEscDataLog, this);
+    board_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/board/get_dev_info", &Control::CallbackBoardDeviceInfo, this);
 }
 
 bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res)
@@ -52,6 +53,21 @@ bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Req
         dev_info.valid = esc_device_info_status_ & (1 << i);
         res.devices_info.push_back(dev_info);
     }
+    return true;
+}
+
+bool Control::CallbackBoardDeviceInfo(ae_powerboard_control::GetBoardDeviceInfo::Request &req, ae_powerboard_control::GetBoardDeviceInfo::Response &res)
+{
+    ae_powerboard_control::BoardDeviceInfo dev_info;
+    dev_info.hw_build = board_device_info_.hw_build;
+    dev_info.serial_number = board_device_info_.serial_number;
+    dev_info.test = board_device_info_.hw_build & 0x01;
+    dev_info.fw_version.high = board_device_info_.fw_number.major;
+    dev_info.fw_version.mid = board_device_info_.fw_number.mid;
+    dev_info.fw_version.low = board_device_info_.fw_number.minor;
+    dev_info.valid = board_device_info_status_;
+    res.device_info = dev_info;
+
     return true;
 }
 
@@ -80,12 +96,12 @@ bool Control::CallbackEscDataLog(ae_powerboard_control::GetEscDataLog::Request &
     {
         ae_powerboard_control::EscDataLog data_log;
         data_log.esc_number = esc1 + i;
-        data_log.diagnostic_status = esc_data_logs_[i].Diagnostic_status;
+        data_log.diagnostic_status = esc_data_log_[i].Diagnostic_status;
         data_log.valid = esc_data_log_status_ & (1 << i);
-        data_log.motor_max_is = Utils::ConvertFixedToFloat(esc_data_logs_[i].Is_Motor_Max, Utils::I4Q8, 0);
-        data_log.motor_avg_is = esc_data_logs_[i].Is_Motor_Avg * 0.1f;
-        data_log.motor_max_temp = esc_data_logs_[i].Temp_Motor_Max - 50;
-        data_log.esc_max_temp = esc_data_logs_[i].Temp_ESC_Max - 50;
+        data_log.motor_max_is = Utils::ConvertFixedToFloat(esc_data_log_[i].Is_Motor_Max, Utils::I4Q8, 0);
+        data_log.motor_avg_is = esc_data_log_[i].Is_Motor_Avg * 0.1f;
+        data_log.motor_max_temp = esc_data_log_[i].Temp_Motor_Max - 50;
+        data_log.esc_max_temp = esc_data_log_[i].Temp_ESC_Max - 50;
         res.data_log.push_back(data_log);
     }
     return true;
@@ -159,7 +175,7 @@ void Control::GetEscDataLog()
             ROS_INFO("ESC%d DATA - Status: %d, Is_max: %f, Is_avg: %f, Esc_temp_max: %d, Motor_temp_max: %d", (esc1 + i),
                 data_log.Diagnostic_status, Utils::ConvertFixedToFloat(data_log.Is_Motor_Max, Utils::I4Q8, 0), 
                 data_log.Is_Motor_Avg * 0.1f, data_log.Temp_ESC_Max - 50, data_log.Temp_Motor_Max - 50);
-            esc_data_logs_[i] = data_log;
+            esc_data_log_[i] = data_log;
             esc_data_log_status_ |= (1 << i);
         }
     }

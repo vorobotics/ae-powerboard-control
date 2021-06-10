@@ -24,6 +24,7 @@ void Control::Init()
 void Control::DefaultValues()
 {
     drone_control_ = new Pb6s40aDroneControl(i2c_driver_);
+    esc_device_info_status_ = 0x00;
 }
 
 void Control::SetupServices()
@@ -44,6 +45,7 @@ bool Control::CallbackDeviceInfo(ae_powerboard_control::GetDeviceInfo::Request &
         dev_info.fw_version.high = esc_device_infos_[0].fw_number.major;
         dev_info.fw_version.mid = esc_device_infos_[0].fw_number.mid;
         dev_info.fw_version.low = esc_device_infos_[0].fw_number.minor;
+        dev_info.valid = esc_device_info_status_ & (1 << i);
         res.devices_info.push_back(dev_info);
     }
     return true;
@@ -116,6 +118,7 @@ void Control::GetEscDataLog()
 
 void Control::GetEscDeviceInfo()
 {
+    esc_device_info_status_ = 0x00;
     if(i2c_error_)
     {
         return;
@@ -134,6 +137,7 @@ void Control::GetEscDeviceInfo()
                 dev_info.fw_number.major, dev_info.fw_number.mid, dev_info.fw_number.minor, dev_info.device_address,
                 dev_info.hw_build, dev_info.serial_number);
             esc_device_infos_[i] = dev_info;
+            esc_device_info_status_ |= (1 << i);
         }
     }
 }

@@ -27,6 +27,7 @@ class Control
         //
         ERROR_WARN_LOG esc_error_logs_[4];
         ADB_DEVICE_INFO esc_device_infos_[4];
+        uint8_t esc_device_info_status_;
 
         //  ******* methods *******
         // init

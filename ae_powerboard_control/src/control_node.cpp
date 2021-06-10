@@ -36,13 +36,15 @@ bool Control::CallbackDeviceInfo(ae_powerboard_control::GetDeviceInfo::Request &
 {
     for(uint8_t i = 0; i < 4; i++)
     {
-        res.esc_number = esc1 + i;
-        res.hw_build = esc_device_infos_[0].hw_build;
-        res.serial_number = esc_device_infos_[0].serial_number;
-        res.test = esc_device_infos_[0].hw_build & 0x01;
-        res.fw_version.high = esc_device_infos_[0].fw_number.major;
-        res.fw_version.mid = esc_device_infos_[0].fw_number.mid;
-        res.fw_version.low = esc_device_infos_[0].fw_number.minor;
+        ae_powerboard_control::DeviceInfo dev_info;
+        dev_info.esc_number = esc1 + i;
+        dev_info.hw_build = esc_device_infos_[0].hw_build;
+        dev_info.serial_number = esc_device_infos_[0].serial_number;
+        dev_info.test = esc_device_infos_[0].hw_build & 0x01;
+        dev_info.fw_version.high = esc_device_infos_[0].fw_number.major;
+        dev_info.fw_version.mid = esc_device_infos_[0].fw_number.mid;
+        dev_info.fw_version.low = esc_device_infos_[0].fw_number.minor;
+        res.devices_info.push_back(dev_info);
     }
     return true;
 }

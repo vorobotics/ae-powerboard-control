@@ -30,14 +30,15 @@ void Control::DefaultValues()
 void Control::SetupServices()
 {
     // servers
-    esc_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackDeviceInfo, this);
+    esc_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackEscDeviceInfo, this);
+    esc_error_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_error_log", &Control::CallbackEscErrorLog, this);
 }
 
-bool Control::CallbackDeviceInfo(ae_powerboard_control::GetDeviceInfo::Request &req, ae_powerboard_control::GetDeviceInfo::Response &res)
+bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res)
 {
     for(uint8_t i = 0; i < 4; i++)
     {
-        ae_powerboard_control::DeviceInfo dev_info;
+        ae_powerboard_control::EscDeviceInfo dev_info;
         dev_info.esc_number = esc1 + i;
         dev_info.hw_build = esc_device_infos_[i].hw_build;
         dev_info.serial_number = esc_device_infos_[i].serial_number;
@@ -49,6 +50,25 @@ bool Control::CallbackDeviceInfo(ae_powerboard_control::GetDeviceInfo::Request &
         dev_info.fw_version.low = esc_device_infos_[i].fw_number.minor;
         dev_info.valid = esc_device_info_status_ & (1 << i);
         res.devices_info.push_back(dev_info);
+    }
+    return true;
+}
+
+bool Control::CallbackEscErrorLog(ae_powerboard_control::GetEscErrorLog::Request &req, ae_powerboard_control::GetEscErrorLog::Response &res)
+{
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        ae_powerboard_control::EscErrorLog error_log;
+        error_log.esc_number = esc1 + i;
+        error_log.diagnostic_status = esc_error_logs_[i].Diagnostic_status;
+        error_log.valid = esc_error_log_status_ & (1 << i);
+        error_log.last.error = esc_error_logs_[i].Last.Error;
+        error_log.last.warning = esc_error_logs_[i].Last.Warn;
+        error_log.previous.error = esc_error_logs_[i].Prev.Error;
+        error_log.previous.warning = esc_error_logs_[i].Prev.Warn;
+        error_log.all.error = esc_error_logs_[i].All.Error;
+        error_log.all.warning = esc_error_logs_[i].All.Warn;
+        res.error_log.push_back(error_log);
     }
     return true;
 }
@@ -75,6 +95,7 @@ void Control::GetAll()
 
 void Control::GetEscErrorLog()
 {
+    esc_error_log_status_ = 0x00;
     if(i2c_error_)
     {
         return;
@@ -94,6 +115,7 @@ void Control::GetEscErrorLog()
                 er_log.Diagnostic_status, er_log.Last.Error, er_log.Last.Warn, er_log.Prev.Error, er_log.Prev.Warn,
                 er_log.All.Error, er_log.All.Warn);
             esc_error_logs_[i] = er_log;
+            esc_error_log_status_ |= (1 << i);
         }
     }
 }

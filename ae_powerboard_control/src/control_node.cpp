@@ -32,14 +32,18 @@ void Control::SetupServices()
     dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackDeviceInfo, this);
 }
 
-bool Control::CallbackDeviceInfo(ae_powerboard_control::DeviceInfo::Request &req, ae_powerboard_control::DeviceInfo::Response &res)
+bool Control::CallbackDeviceInfo(ae_powerboard_control::GetDeviceInfo::Request &req, ae_powerboard_control::GetDeviceInfo::Response &res)
 {
-    res.hw_build = esc_device_infos_[0].hw_build;
-    res.serial_number = esc_device_infos_[0].serial_number;
-    res.test = esc_device_infos_[0].hw_build & 0x01;
-    res.fw_version.high = esc_device_infos_[0].fw_number.major;
-    res.fw_version.mid = esc_device_infos_[0].fw_number.mid;
-    res.fw_version.low = esc_device_infos_[0].fw_number.minor;
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        res.esc_number = esc1 + i;
+        res.hw_build = esc_device_infos_[0].hw_build;
+        res.serial_number = esc_device_infos_[0].serial_number;
+        res.test = esc_device_infos_[0].hw_build & 0x01;
+        res.fw_version.high = esc_device_infos_[0].fw_number.major;
+        res.fw_version.mid = esc_device_infos_[0].fw_number.mid;
+        res.fw_version.low = esc_device_infos_[0].fw_number.minor;
+    }
     return true;
 }
 

@@ -7,7 +7,7 @@
 #include "i2c_driver.h" 
 #include "pb6s40a_control.h"
 
-#include "ae_powerboard_control/DeviceInfo.h"
+#include "ae_powerboard_control/GetDeviceInfo.h"
 
 #define DEVICE_I2C_NANO "/dev/i2c-1"
 #define DEVICE_I2C_NX "/dev/i2c-8"
@@ -45,7 +45,7 @@ class Control
         //Board
         void GetBoardDeviceInfo();
         //Callback for service
-        bool CallbackDeviceInfo(ae_powerboard_control::DeviceInfo::Request &req, ae_powerboard_control::DeviceInfo::Response &res);
+        bool CallbackDeviceInfo(ae_powerboard_control::GetDeviceInfo::Request &req, ae_powerboard_control::GetDeviceInfo::Response &res);
     
     public:
         // constructor

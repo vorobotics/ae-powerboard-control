@@ -52,12 +52,13 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Fw.msg
+  DeviceInfo.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  DeviceInfo.srv
+  GetDeviceInfo.srv
 )
 
 ## Generate actions in the 'action' folder

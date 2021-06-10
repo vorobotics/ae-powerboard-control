@@ -21,6 +21,7 @@ class Control
         // ros servers
         ros::ServiceServer esc_dev_info_srv_;
         ros::ServiceServer esc_error_log_srv_;
+        ros::ServiceServer esc_data_log_srv_;
         //i2c
         I2CDriver i2c_driver_;
         bool i2c_error_;
@@ -29,6 +30,9 @@ class Control
         //esc error log
         ERROR_WARN_LOG esc_error_logs_[4];
         uint8_t esc_error_log_status_;
+        //esc data log
+        RUN_DATA_Struct esc_data_logs_[4];
+        uint8_t esc_data_log_status_;
         //esc device info
         ADB_DEVICE_INFO esc_device_infos_[4];
         uint8_t esc_device_info_status_;

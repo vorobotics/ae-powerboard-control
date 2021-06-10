@@ -107,11 +107,11 @@ void Control::GetEscErrorLog()
         uint8_t status = drone_control_->EscGetErrorLogs(&er_log, (esc1 + i));
         if(status)
         {
-            ROS_ERROR("ESC%d ERROR LOG - problem reading data", i);
+            ROS_ERROR("ESC%d ERROR LOG - problem reading data", (esc1 + i));
         }
         else
         {
-            ROS_INFO("ESC%d ERROR LOG - Status: %u, Last E: 0x%x W: 0x%x, Prev E: 0x%x W: 0x%x, All E: 0x%x W: 0x%x", i,  
+            ROS_INFO("ESC%d ERROR LOG - Status: %u, Last E: 0x%x W: 0x%x, Prev E: 0x%x W: 0x%x, All E: 0x%x W: 0x%x", (esc1 + i),  
                 er_log.Diagnostic_status, er_log.Last.Error, er_log.Last.Warn, er_log.Prev.Error, er_log.Prev.Warn,
                 er_log.All.Error, er_log.All.Warn);
             esc_error_logs_[i] = er_log;
@@ -122,21 +122,28 @@ void Control::GetEscErrorLog()
 
 void Control::GetEscDataLog()
 {
+    esc_data_log_status_ = 0x00;
     if(i2c_error_)
     {
         return;
     }
-    RUN_DATA_Struct esc_data_logs[4];
-    uint8_t status = 0;
-    status = drone_control_->EscGetDataLogs(&esc_data_logs[0],esc1);      
-    status = drone_control_->EscGetDataLogs(&esc_data_logs[1],esc2);      
-    status = drone_control_->EscGetDataLogs(&esc_data_logs[2],esc3);      
-    status = drone_control_->EscGetDataLogs(&esc_data_logs[3],esc4);
+
     for (int i = 0; i < 4; i++)
     {
-        ROS_INFO("ESC DATA - Status: %d, Is_max: %f, Is_avg: %f, Esc_temp_max: %d, Motor_temp_max: %d", esc_data_logs[i].Diagnostic_status,
-        Utils::ConvertFixedToFloat(esc_data_logs[i].Is_Motor_Max, Utils::I4Q8, 0), esc_data_logs[i].Is_Motor_Avg * 0.1f, 
-        esc_data_logs[i].Temp_ESC_Max - 50, esc_data_logs[i].Temp_Motor_Max - 50);
+        RUN_DATA_Struct data_log;
+        uint8_t status = drone_control_->EscGetDataLogs(&data_log, (esc1 + i)); 
+        if(status)
+        {
+            ROS_ERROR("ESC%d DATA - problem reading data", (esc1 + i));
+        } 
+        else
+        {
+            ROS_INFO("ESC%d DATA - Status: %d, Is_max: %f, Is_avg: %f, Esc_temp_max: %d, Motor_temp_max: %d", (esc1 + i),
+                data_log.Diagnostic_status, Utils::ConvertFixedToFloat(data_log.Is_Motor_Max, Utils::I4Q8, 0), 
+                data_log.Is_Motor_Avg * 0.1f, data_log.Temp_ESC_Max - 50, data_log.Temp_Motor_Max - 50);
+            esc_data_logs_[i] = data_log;
+            esc_data_log_status_ |= (1 << i);
+        }
     }
 }
 
@@ -151,13 +158,13 @@ void Control::GetEscDeviceInfo()
     for(uint8_t i = 0; i< 4; i++)
     {
         ADB_DEVICE_INFO dev_info;
-        if(drone_control_->EscGetDeviceInfo(&dev_info, esc1 + i))
+        if(drone_control_->EscGetDeviceInfo(&dev_info, (esc1 + i)))
         {
-            ROS_INFO("ESC%d INFO - - problem reading data", i);
+            ROS_INFO("ESC%d INFO - - problem reading data", (esc1 + i));
         }
         else
         {
-            ROS_INFO("ESC%d INFO - Status: %u, Fw: %u.%u.%u, Address: %u, Hw build: %u, Sn: %u", i, dev_info.Diagnostic_status,
+            ROS_INFO("ESC%d INFO - Status: %u, Fw: %u.%u.%u, Address: %u, Hw build: %u, Sn: %u", (esc1 + i), dev_info.Diagnostic_status,
                 dev_info.fw_number.major, dev_info.fw_number.mid, dev_info.fw_number.minor, dev_info.device_address,
                 dev_info.hw_build, dev_info.serial_number);
             esc_device_infos_[i] = dev_info;

@@ -1,0 +1,6 @@
+uint8 esc_number
+ae_powerboard_control/ErrorWarn last
+ae_powerboard_control/ErrorWarn previous
+ae_powerboard_control/ErrorWarn all
+bool valid
+uint8 diagnostic_status

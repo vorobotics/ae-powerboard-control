@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="ae_powerboard_control" type="control_node" name="pw_control_node" output="screen"/>
+</launch>

@@ -63,7 +63,7 @@ add_service_files(
   FILES
   GetEscDeviceInfo.srv
   GetEscErrorLog.srv
-  GetEscDataLog.srv
+  # GetEscDataLog.srv
 )
 
 ## Generate actions in the 'action' folder

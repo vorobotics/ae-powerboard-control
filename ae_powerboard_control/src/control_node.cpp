@@ -32,6 +32,7 @@ void Control::SetupServices()
     // servers
     esc_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackEscDeviceInfo, this);
     esc_error_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_error_log", &Control::CallbackEscErrorLog, this);
+    esc_data_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_data_log", &Control::CallbackEscDataLog, this);
 }
 
 bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res)
@@ -69,6 +70,23 @@ bool Control::CallbackEscErrorLog(ae_powerboard_control::GetEscErrorLog::Request
         error_log.all.error = esc_error_logs_[i].All.Error;
         error_log.all.warning = esc_error_logs_[i].All.Warn;
         res.error_log.push_back(error_log);
+    }
+    return true;
+}
+
+bool Control::CallbackEscDataLog(ae_powerboard_control::GetEscDataLog::Request &req, ae_powerboard_control::GetEscDataLog::Response &res)
+{
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        ae_powerboard_control::EscDataLog data_log;
+        data_log.esc_number = esc1 + i;
+        data_log.diagnostic_status = esc_data_logs_[i].Diagnostic_status;
+        data_log.valid = esc_data_log_status_ & (1 << i);
+        data_log.motor_max_is = Utils::ConvertFixedToFloat(esc_data_logs_[i].Is_Motor_Max, Utils::I4Q8, 0);
+        data_log.motor_avg_is = esc_data_logs_[i].Is_Motor_Avg * 0.1f;
+        data_log.motor_max_temp = esc_data_logs_[i].Temp_Motor_Max - 50;
+        data_log.esc_max_temp = esc_data_logs_[i].Temp_ESC_Max - 50;
+        res.data_log.push_back(data_log);
     }
     return true;
 }

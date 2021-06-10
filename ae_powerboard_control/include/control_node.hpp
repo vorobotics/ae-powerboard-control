@@ -9,6 +9,7 @@
 
 #include "ae_powerboard_control/GetEscDeviceInfo.h"
 #include "ae_powerboard_control/GetEscErrorLog.h"
+#include "ae_powerboard_control/GetEscDataLog.h"
 
 #define DEVICE_I2C_NANO "/dev/i2c-1"
 #define DEVICE_I2C_NX "/dev/i2c-8"
@@ -56,6 +57,7 @@ class Control
         //Callback for service
         bool CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res);
         bool CallbackEscErrorLog(ae_powerboard_control::GetEscErrorLog::Request &req, ae_powerboard_control::GetEscErrorLog::Response &res);
+        bool CallbackEscDataLog(ae_powerboard_control::GetEscDataLog::Request &req, ae_powerboard_control::GetEscDataLog::Response &res);
     
     public:
         // constructor

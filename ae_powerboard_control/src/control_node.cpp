@@ -39,12 +39,14 @@ bool Control::CallbackDeviceInfo(ae_powerboard_control::GetDeviceInfo::Request &
     {
         ae_powerboard_control::DeviceInfo dev_info;
         dev_info.esc_number = esc1 + i;
-        dev_info.hw_build = esc_device_infos_[0].hw_build;
-        dev_info.serial_number = esc_device_infos_[0].serial_number;
-        dev_info.test = esc_device_infos_[0].hw_build & 0x01;
-        dev_info.fw_version.high = esc_device_infos_[0].fw_number.major;
-        dev_info.fw_version.mid = esc_device_infos_[0].fw_number.mid;
-        dev_info.fw_version.low = esc_device_infos_[0].fw_number.minor;
+        dev_info.hw_build = esc_device_infos_[i].hw_build;
+        dev_info.serial_number = esc_device_infos_[i].serial_number;
+        dev_info.diagnostic_status = esc_device_infos_[i].Diagnostic_status;
+        dev_info.address = esc_device_infos_[i].device_address;
+        dev_info.test = esc_device_infos_[i].hw_build & 0x01;
+        dev_info.fw_version.high = esc_device_infos_[i].fw_number.major;
+        dev_info.fw_version.mid = esc_device_infos_[i].fw_number.mid;
+        dev_info.fw_version.low = esc_device_infos_[i].fw_number.minor;
         dev_info.valid = esc_device_info_status_ & (1 << i);
         res.devices_info.push_back(dev_info);
     }

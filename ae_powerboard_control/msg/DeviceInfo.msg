@@ -5,4 +5,4 @@ uint8 address
 ae_powerboard_control/Fw fw_version
 bool test
 bool valid
-bool diagnostic_status
+uint8 diagnostic_status

@@ -30,7 +30,7 @@ void Control::DefaultValues()
 void Control::SetupServices()
 {
     // servers
-    dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackDeviceInfo, this);
+    esc_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackDeviceInfo, this);
 }
 
 bool Control::CallbackDeviceInfo(ae_powerboard_control::GetDeviceInfo::Request &req, ae_powerboard_control::GetDeviceInfo::Response &res)

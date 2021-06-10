@@ -225,7 +225,7 @@ void Control::GetBoardDeviceInfo()
         ROS_INFO("BOARD INFO - Fw: %u.%u.%u, Hw build: %u, Sn: %u", dev_info.fw_number.major, dev_info.fw_number.mid, 
           dev_info.fw_number.minor, dev_info.hw_build, dev_info.serial_number);
         board_device_info_ = dev_info;
-        board_device_info_status_ = false;
+        board_device_info_status_ = true;
     }
 }
 

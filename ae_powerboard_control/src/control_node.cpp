@@ -33,6 +33,7 @@ void Control::SetupServices()
     esc_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_dev_info", &Control::CallbackEscDeviceInfo, this);
     esc_error_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_error_log", &Control::CallbackEscErrorLog, this);
     esc_data_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_data_log", &Control::CallbackEscDataLog, this);
+    esc_resistance_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_resistance", &Control::CallbackEscResistance, this);
     board_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/board/get_dev_info", &Control::CallbackBoardDeviceInfo, this);
 }
 
@@ -107,6 +108,23 @@ bool Control::CallbackEscDataLog(ae_powerboard_control::GetEscDataLog::Request &
     return true;
 }
 
+bool Control::CallbackEscResistance(ae_powerboard_control::GetEscResistance::Request &req, ae_powerboard_control::GetEscResistance::Response &res)
+{
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        ae_powerboard_control::EscResistance resistance;
+        resistance.esc_number = esc1 + i;
+        resistance.diagnostic_status = esc_data_log_[i].Diagnostic_status;
+        resistance.valid = esc_restistance_status_ & (1 << i);
+        resistance.phase_a = esc_resistance_[i].Phase[0];
+        resistance.phase_b = esc_resistance_[i].Phase[1];
+        resistance.phase_c = esc_resistance_[i].Phase[2];
+        resistance.global = esc_resistance_[i].Global;
+        res.resistance.push_back(resistance);
+    }
+    return true;
+}
+
 void Control::OpenI2C()
 {
     std::string device(DEVICE_I2C_NANO);
@@ -124,6 +142,7 @@ void Control::GetAll()
     this->GetEscErrorLog();
     this->GetEscDataLog();
     this->GetEscDeviceInfo();
+    this->GetEscResistance();
     this->GetBoardDeviceInfo();
 }
 
@@ -177,6 +196,32 @@ void Control::GetEscDataLog()
                 data_log.Is_Motor_Avg * 0.1f, data_log.Temp_ESC_Max - 50, data_log.Temp_Motor_Max - 50);
             esc_data_log_[i] = data_log;
             esc_data_log_status_ |= (1 << i);
+        }
+    }
+}
+
+void Control::GetEscResistance()
+{
+    esc_restistance_status_ = 0x00;
+    if(i2c_error_)
+    {
+        return;
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        RESISTANCE_STRUCT res;
+        uint8_t status = drone_control_->EscGetResistance(&res, (esc1 + i)); 
+        if(status)
+        {
+            ROS_ERROR("ESC%d RESISTANCE - problem reading data", (esc1 + i));
+        } 
+        else
+        {
+            ROS_INFO("ESC%d RESISTANCE - Status: %d, Ph A: %.6f, Ph B: %.6f, Ph C: %.6f, Rs: %.6f", (esc1 + i),
+                res.Diagnostic_status, res.Phase[0], res.Phase[1], res.Phase[2], res.Global);
+            esc_resistance_[i] = res;
+            esc_restistance_status_ |= (1 << i);
         }
     }
 }

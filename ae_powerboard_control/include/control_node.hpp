@@ -11,6 +11,7 @@
 #include "ae_powerboard_control/GetBoardDeviceInfo.h"
 #include "ae_powerboard_control/GetEscErrorLog.h"
 #include "ae_powerboard_control/GetEscDataLog.h"
+#include "ae_powerboard_control/GetEscResistance.h"
 
 #define DEVICE_I2C_NANO "/dev/i2c-1"
 #define DEVICE_I2C_NX "/dev/i2c-8"
@@ -24,6 +25,7 @@ class Control
         ros::ServiceServer esc_dev_info_srv_;
         ros::ServiceServer esc_error_log_srv_;
         ros::ServiceServer esc_data_log_srv_;
+        ros::ServiceServer esc_resistance_srv_;
         ros::ServiceServer board_dev_info_srv_;
         //i2c
         I2CDriver i2c_driver_;
@@ -39,6 +41,9 @@ class Control
         //esc device info
         ADB_DEVICE_INFO esc_device_info_[4];
         uint8_t esc_device_info_status_;
+        //esc resistance 
+        RESISTANCE_STRUCT esc_resistance_[4];
+        uint8_t esc_restistance_status_;
         //board device info
         POWER_BOARD_INFO board_device_info_;
         bool board_device_info_status_;
@@ -57,12 +62,14 @@ class Control
         void GetEscErrorLog();
         void GetEscDataLog();
         void GetEscDeviceInfo();
+        void GetEscResistance();
         //Board
         void GetBoardDeviceInfo();
         //Callback for service
         bool CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res);
         bool CallbackEscErrorLog(ae_powerboard_control::GetEscErrorLog::Request &req, ae_powerboard_control::GetEscErrorLog::Response &res);
         bool CallbackEscDataLog(ae_powerboard_control::GetEscDataLog::Request &req, ae_powerboard_control::GetEscDataLog::Response &res);
+        bool CallbackEscResistance(ae_powerboard_control::GetEscResistance::Request &req, ae_powerboard_control::GetEscResistance::Response &res);
         bool CallbackBoardDeviceInfo(ae_powerboard_control::GetBoardDeviceInfo::Request &req, ae_powerboard_control::GetBoardDeviceInfo::Response &res);
     
     public:

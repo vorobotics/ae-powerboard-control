@@ -1,0 +1,7 @@
+ae_powerboard_control/LedChannel front_left
+ae_powerboard_control/LedChannel front_right
+ae_powerboard_control/LedChannel rear_left
+ae_powerboard_control/LedChannel rear_right
+ae_powerboard_control/LedChannel additional
+---
+bool success

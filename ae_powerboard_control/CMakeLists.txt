@@ -57,6 +57,8 @@ add_message_files(
   EscErrorLog.msg
   EscDataLog.msg
   BoardDeviceInfo.msg
+  Color.msg
+  LedChannel.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -66,6 +68,7 @@ add_service_files(
   GetEscErrorLog.srv
   GetEscDataLog.srv
   GetBoardDeviceInfo.srv
+  SetLedColor.srv
 )
 
 ## Generate actions in the 'action' folder

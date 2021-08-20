@@ -24,6 +24,7 @@ void Control::Init()
 void Control::DefaultValues()
 {
     drone_control_ = new Pb6s40aDroneControl(i2c_driver_);
+    led_control_ = new Pb6s40aLedsControl(i2c_driver_);
     esc_device_info_status_ = 0x00;
 }
 
@@ -34,6 +35,60 @@ void Control::SetupServices()
     esc_error_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_error_log", &Control::CallbackEscErrorLog, this);
     esc_data_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_data_log", &Control::CallbackEscDataLog, this);
     board_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/board/get_dev_info", &Control::CallbackBoardDeviceInfo, this);
+    led_set_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_color", &Control::CallbackLedCustomColor, this);
+}
+
+bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::Request &req, ae_powerboard_control::SetLedCustomColor::Response &res)
+{
+    if(i2c_error_)
+    {
+        res.success = false;
+        return true;
+    }
+
+    //update led count
+    LEDS_COUNT leds_count;
+    led_control_->LedsGetLedsCount(leds_count);
+    leds_count.fl_leds_count = req.front_left.color.size();
+    leds_count.fr_leds_count = req.front_right.color.size();
+    leds_count.rl_leds_count = req.rear_left.color.size();
+    leds_count.rr_leds_count = req.rear_right.color.size();
+    if(req.enable_additional)
+    {
+        leds_count.ad_leds_count = req.additional.color.size();
+    }
+    led_control_->LedsSetLedsCount(leds_count);
+
+    //front_left
+    COLOR color_buffer_fl[req.front_left.color.size()];
+    memcpy(color_buffer_fl, req.front_left.color.data(), sizeof(req.front_left.color.data()));
+    led_control_->LedsSendColorBuffer(fl_buffer, color_buffer_fl, req.front_left.color.size());
+
+    //front_right
+    COLOR color_buffer_fr[req.front_right.color.size()];
+    memcpy(color_buffer_fr, req.front_right.color.data(), sizeof(req.front_right.color.data()));
+    led_control_->LedsSendColorBuffer(fr_buffer, color_buffer_fr, req.front_right.color.size());
+
+    //rear_left
+    COLOR color_buffer_rl[req.rear_left.color.size()];
+    memcpy(color_buffer_rl, req.rear_left.color.data(), sizeof(req.rear_left.color.data()));
+    led_control_->LedsSendColorBuffer(rl_buffer, color_buffer_rl, req.rear_left.color.size());
+
+    //rear_right
+    COLOR color_buffer_rr[req.rear_right.color.size()];
+    memcpy(color_buffer_rr, req.rear_right.color.data(), sizeof(req.rear_right.color.data()));
+    led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rr, req.rear_right.color.size());
+
+    //additional
+    if(req.enable_additional)
+    {
+        COLOR color_buffer_add[req.additional.color.size()];
+        memcpy(color_buffer_add, req.additional.color.data(), sizeof(req.additional.color.data()));
+        led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_add, req.additional.color.size());
+    }
+
+    res.success = true;
+    return true;
 }
 
 bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res)

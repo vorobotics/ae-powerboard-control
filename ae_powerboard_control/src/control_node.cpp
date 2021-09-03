@@ -46,6 +46,9 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
         return true;
     }
 
+    //turn off predefinned effect
+    led_control_->LedsSwitchPredefinedEffect(false);
+    
     //update led count
     LEDS_COUNT leds_count;
     led_control_->LedsGetLedsCount(leds_count);
@@ -86,6 +89,9 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
         memcpy(color_buffer_add, req.additional.color.data(), sizeof(req.additional.color.data()));
         led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_add, req.additional.color.size());
     }
+
+    //update led buffer
+    led_control_->LedsUpdate();
 
     res.success = true;
     return true;

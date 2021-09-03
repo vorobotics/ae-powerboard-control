@@ -35,7 +35,67 @@ void Control::SetupServices()
     esc_error_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_error_log", &Control::CallbackEscErrorLog, this);
     esc_data_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_data_log", &Control::CallbackEscDataLog, this);
     board_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/board/get_dev_info", &Control::CallbackBoardDeviceInfo, this);
-    led_set_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_color", &Control::CallbackLedCustomColor, this);
+    led_set_custom_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_color", &Control::CallbackLedCustomColor, this);
+    led_set_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_color", &Control::CallbackLedColor, this);
+}
+
+bool Control::CallbackLedColor(ae_powerboard_control::SetLedColor::Request &req, ae_powerboard_control::SetLedColor::Response &res)
+{
+    if(i2c_error_)
+    {
+        res.success = false;
+        return true;
+    }
+
+    //turn off predefinned effect
+    led_control_->LedsSwitchPredefinedEffect(false);
+    
+    //update led count
+    LEDS_COUNT leds_count;
+    led_control_->LedsGetLedsCount(leds_count);
+    leds_count.fl_leds_count = req.leds_count;
+    leds_count.fr_leds_count = req.leds_count;
+    leds_count.rl_leds_count = req.leds_count;
+    leds_count.rr_leds_count = req.leds_count;
+    if(req.enable_add)
+    {
+        leds_count.ad_leds_count = req.leds_add_count;
+    }
+    led_control_->LedsSetLedsCount(leds_count);
+
+    //front_left
+    COLOR color_buffer_fl[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fl, *((COLOR*)&req.front_left), req.leds_count);
+    led_control_->LedsSendColorBuffer(fl_buffer, color_buffer_fl, req.leds_count);
+
+    //front_right
+    COLOR color_buffer_fr[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fr, *((COLOR*)&req.front_right), req.leds_count);
+    led_control_->LedsSendColorBuffer(fr_buffer, color_buffer_fr, req.leds_count);
+
+    //rear_left
+    COLOR color_buffer_rl[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rl, *((COLOR*)&req.rear_left), req.leds_count);
+    led_control_->LedsSendColorBuffer(rl_buffer, color_buffer_rl, req.leds_count);
+
+    //rear_right
+    COLOR color_buffer_rr[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rr, *((COLOR*)&req.rear_right), req.leds_count);
+    led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rr, req.leds_count);
+
+    //additional
+    if(req.enable_add)
+    {
+        COLOR color_buffer_ad[req.leds_count];
+        led_control_->LedsSetBufferWithOneColor(color_buffer_ad, *((COLOR*)&req.add), req.leds_add_count);
+        led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_ad, req.leds_add_count);
+    }
+
+    //update led buffer
+    led_control_->LedsUpdate();
+
+    res.success = true;
+    return true;
 }
 
 bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::Request &req, ae_powerboard_control::SetLedCustomColor::Response &res)
@@ -56,9 +116,9 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
     leds_count.fr_leds_count = req.front_right.color.size();
     leds_count.rl_leds_count = req.rear_left.color.size();
     leds_count.rr_leds_count = req.rear_right.color.size();
-    if(req.enable_additional)
+    if(req.enable_add)
     {
-        leds_count.ad_leds_count = req.additional.color.size();
+        leds_count.ad_leds_count = req.add.color.size();
     }
     led_control_->LedsSetLedsCount(leds_count);
 
@@ -83,11 +143,11 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
     led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rr, req.rear_right.color.size());
 
     //additional
-    if(req.enable_additional)
+    if(req.enable_add)
     {
-        COLOR color_buffer_add[req.additional.color.size()];
-        memcpy(color_buffer_add, req.additional.color.data(), sizeof(req.additional.color.data()));
-        led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_add, req.additional.color.size());
+        COLOR color_buffer_ad[req.add.color.size()];
+        memcpy(color_buffer_ad, req.add.color.data(), sizeof(req.add.color.data()));
+        led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_ad, req.add.color.size());
     }
 
     //update led buffer

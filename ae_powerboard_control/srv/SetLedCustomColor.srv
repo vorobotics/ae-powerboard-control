@@ -1,9 +1,9 @@
-bool enable_additional
+bool enable_add
 
 ae_powerboard_control/LedChannel front_left
 ae_powerboard_control/LedChannel front_right
 ae_powerboard_control/LedChannel rear_left
 ae_powerboard_control/LedChannel rear_right
-ae_powerboard_control/LedChannel additional
+ae_powerboard_control/LedChannel add
 ---
 bool success

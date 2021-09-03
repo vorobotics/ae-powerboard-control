@@ -68,6 +68,7 @@ add_service_files(
   GetEscErrorLog.srv
   GetEscDataLog.srv
   GetBoardDeviceInfo.srv
+  SetLedColor.srv
   SetLedCustomColor.srv
 )
 

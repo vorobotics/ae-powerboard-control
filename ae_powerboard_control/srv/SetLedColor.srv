@@ -1,11 +1,8 @@
 uint16 leds_count
-ae_powerboard_control/Color front_left
-ae_powerboard_control/Color front_right
-ae_powerboard_control/Color rear_left
-ae_powerboard_control/Color rear_right
+ae_powerboard_control/Color leds_color
 
 bool enable_add
 uint16 leds_add_count
-ae_powerboard_control/Color add
+ae_powerboard_control/Color add_color
 ---
 bool success

@@ -157,6 +157,11 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
     return true;
 }
 
+bool Control::CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res)
+{
+    
+}
+
 bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res)
 {
     for(uint8_t i = 0; i < 4; i++)

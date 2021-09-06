@@ -62,32 +62,32 @@ bool Control::CallbackLedColor(ae_powerboard_control::SetLedColor::Request &req,
         leds_count.ad_leds_count = req.leds_add_count;
     }
     led_control_->LedsSetLedsCount(leds_count);
-
+    
     //front_left
     COLOR color_buffer_fl[req.leds_count];
-    led_control_->LedsSetBufferWithOneColor(color_buffer_fl, *((COLOR*)&req.front_left), req.leds_count);
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fl, *((COLOR*)&req.leds_color), req.leds_count);
     led_control_->LedsSendColorBuffer(fl_buffer, color_buffer_fl, req.leds_count);
 
     //front_right
     COLOR color_buffer_fr[req.leds_count];
-    led_control_->LedsSetBufferWithOneColor(color_buffer_fr, *((COLOR*)&req.front_right), req.leds_count);
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fr, *((COLOR*)&req.leds_color), req.leds_count);
     led_control_->LedsSendColorBuffer(fr_buffer, color_buffer_fr, req.leds_count);
 
     //rear_left
     COLOR color_buffer_rl[req.leds_count];
-    led_control_->LedsSetBufferWithOneColor(color_buffer_rl, *((COLOR*)&req.rear_left), req.leds_count);
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rl, *((COLOR*)&req.leds_color), req.leds_count);
     led_control_->LedsSendColorBuffer(rl_buffer, color_buffer_rl, req.leds_count);
 
     //rear_right
     COLOR color_buffer_rr[req.leds_count];
-    led_control_->LedsSetBufferWithOneColor(color_buffer_rr, *((COLOR*)&req.rear_right), req.leds_count);
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rr, *((COLOR*)&req.leds_color), req.leds_count);
     led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rr, req.leds_count);
 
     //additional
     if(req.enable_add)
     {
         COLOR color_buffer_ad[req.leds_count];
-        led_control_->LedsSetBufferWithOneColor(color_buffer_ad, *((COLOR*)&req.add), req.leds_add_count);
+        led_control_->LedsSetBufferWithOneColor(color_buffer_ad, *((COLOR*)&req.add_color), req.leds_add_count);
         led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_ad, req.leds_add_count);
     }
 
@@ -157,10 +157,10 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
     return true;
 }
 
-bool Control::CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res)
-{
+// bool Control::CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res)
+// {
     
-}
+// }
 
 bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res)
 {

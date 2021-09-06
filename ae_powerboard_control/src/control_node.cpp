@@ -37,6 +37,7 @@ void Control::SetupServices()
     board_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/board/get_dev_info", &Control::CallbackBoardDeviceInfo, this);
     led_set_custom_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_color", &Control::CallbackLedCustomColor, this);
     led_set_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_color", &Control::CallbackLedColor, this);
+    led_set_custom_effect_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_effect", &Control::CallbackLedCustomEffect, this);
 }
 
 bool Control::CallbackLedColor(ae_powerboard_control::SetLedColor::Request &req, ae_powerboard_control::SetLedColor::Response &res)
@@ -150,17 +151,55 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
         led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_ad, req.add.color.size());
     }
 
-    //update led buffer
+    //update led buffercolor_buffer_rr
     led_control_->LedsUpdate();
 
     res.success = true;
     return true;
 }
 
-// bool Control::CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res)
-// {
-    
-// }
+bool Control::CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res)
+{
+    //turn off predefinned effect
+    led_control_->LedsSwitchPredefinedEffect(false);
+
+    //update led count
+    LEDS_COUNT leds_count;
+    led_control_->LedsGetLedsCount(leds_count);
+    leds_count.fl_leds_count = req.leds_count;
+    leds_count.fr_leds_count = req.leds_count;
+    leds_count.rl_leds_count = req.leds_count;
+    leds_count.rr_leds_count = req.leds_count;
+    led_control_->LedsSetLedsCount(leds_count);
+
+    //front_left
+    COLOR color_buffer_fl[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fl, *((COLOR*)&req.front_left), req.leds_count);
+
+    //front_right
+    COLOR color_buffer_fr[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fr, *((COLOR*)&req.front_right), req.leds_count);
+
+    //rear_leftcolor_buffer_rr
+    COLOR color_buffer_rl[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rl, *((COLOR*)&req.rear_left), req.leds_count);
+
+    //rear_right
+    COLOR color_buffer_rr[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rr, *((COLOR*)&req.rear_right), req.leds_count);
+
+    //set predefined effect
+    led_control_->LedsSetPredefinedEffect(*((COLOR*)&req.front_left), *((COLOR*)&req.front_right), *((COLOR*)&req.rear_left), *((COLOR*)&req.rear_right), req.on_led_cycles, req.off_led_cycles, req.effect_type, req.set_default);
+
+    //update led buffer
+    led_control_->LedsUpdate();
+
+    //turn on predefinned effect
+    led_control_->LedsSwitchPredefinedEffect(true);
+
+    res.success = true;
+    return true;
+}
 
 bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res)
 {

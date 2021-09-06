@@ -70,6 +70,7 @@ add_service_files(
   GetBoardDeviceInfo.srv
   SetLedColor.srv
   SetLedCustomColor.srv
+  SetLedCustomEffect.srv
 )
 
 ## Generate actions in the 'action' folder

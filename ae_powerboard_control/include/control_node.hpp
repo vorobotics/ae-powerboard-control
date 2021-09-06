@@ -13,6 +13,7 @@
 #include "ae_powerboard_control/GetEscDataLog.h"
 #include "ae_powerboard_control/SetLedColor.h"
 #include "ae_powerboard_control/SetLedCustomColor.h"
+#include "ae_powerboard_control/SetLedCustomEffect.h"
 
 #define DEVICE_I2C_NANO "/dev/i2c-1"
 #define DEVICE_I2C_NX "/dev/i2c-8"
@@ -29,6 +30,7 @@ class Control
         ros::ServiceServer board_dev_info_srv_;
         ros::ServiceServer led_set_custom_color_srv_;
         ros::ServiceServer led_set_color_srv_;
+        ros::ServiceServer led_set_custom_effect_srv_;
         //i2c
         I2CDriver i2c_driver_;
         bool i2c_error_;
@@ -74,6 +76,7 @@ class Control
         bool CallbackBoardDeviceInfo(ae_powerboard_control::GetBoardDeviceInfo::Request &req, ae_powerboard_control::GetBoardDeviceInfo::Response &res);
         bool CallbackLedColor(ae_powerboard_control::SetLedColor::Request &req, ae_powerboard_control::SetLedColor::Response &res);
         bool CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::Request &req, ae_powerboard_control::SetLedCustomColor::Response &res);
+        bool CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res);
     
     public:
         // constructor

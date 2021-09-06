@@ -13,13 +13,24 @@
 #include "ae_powerboard_control/GetEscDataLog.h"
 #include "ae_powerboard_control/SetLedColor.h"
 #include "ae_powerboard_control/SetLedCustomColor.h"
+#include "ae_powerboard_control/SetLedEffect.h"
 #include "ae_powerboard_control/SetLedCustomEffect.h"
 
-#define DEVICE_I2C_NANO "/dev/i2c-1"
-#define DEVICE_I2C_NX "/dev/i2c-8"
+#define DEVICE_I2C_NANO     "/dev/i2c-1"
+#define DEVICE_I2C_NX       "/dev/i2c-8"
+
+#define MAIN_TIME_PERIOD_S  0.05
+#define LED_COUNT_EFFECT    8
+
 class Control
 {
     private:
+        //  ******* constants ********
+        enum Effect_Type
+        {
+            NO_EFFECT = 0,
+            FLIGHT_MODE = 1,
+        };
         //  ******* properties ********
         // ros node
         ros::NodeHandle nh_;
@@ -31,6 +42,9 @@ class Control
         ros::ServiceServer led_set_custom_color_srv_;
         ros::ServiceServer led_set_color_srv_;
         ros::ServiceServer led_set_custom_effect_srv_;
+        ros::ServiceServer led_set_effect_srv_;
+        // ros timers
+        ros::Timer main_tim_;
         //i2c
         I2CDriver i2c_driver_;
         bool i2c_error_;
@@ -52,12 +66,17 @@ class Control
         bool board_device_info_status_;
         // **led**
         LEDS_COUNT mounted_leds_count_;
+        //led effect
+        bool led_effect_run_;
+        bool led_effect_update_;
+        uint8_t led_effect_type_;
 
         //  ******* methods *******
         // init
         void Init();
         void DefaultValues();
         void SetupServices();
+        void SetupTimers();
         // i2c
         void OpenI2C();
         void CloseI2C();
@@ -76,7 +95,13 @@ class Control
         bool CallbackBoardDeviceInfo(ae_powerboard_control::GetBoardDeviceInfo::Request &req, ae_powerboard_control::GetBoardDeviceInfo::Response &res);
         bool CallbackLedColor(ae_powerboard_control::SetLedColor::Request &req, ae_powerboard_control::SetLedColor::Response &res);
         bool CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::Request &req, ae_powerboard_control::SetLedCustomColor::Response &res);
+        bool CallbackLedEffect(ae_powerboard_control::SetLedEffect::Request &req, ae_powerboard_control::SetLedEffect::Response &res);
         bool CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res);
+        //Callback for timer
+        void CallbackMainTimer(const ros::TimerEvent &event);
+        //Led effect
+        void HandleNoEffect(uint64_t ticks);
+        void HandleFlightModeEffect(uint64_t ticks);
     
     public:
         // constructor

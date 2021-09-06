@@ -71,6 +71,7 @@ add_service_files(
   SetLedColor.srv
   SetLedCustomColor.srv
   SetLedCustomEffect.srv
+  SetLedEffect.srv
 )
 
 ## Generate actions in the 'action' folder

@@ -124,29 +124,29 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
 
     //front_left
     COLOR color_buffer_fl[req.front_left.color.size()];
-    memcpy(color_buffer_fl, req.front_left.color.data(), sizeof(req.front_left.color.data()));
+    memcpy(color_buffer_fl, req.front_left.color.data(), req.front_left.color.size()*sizeof(COLOR));
     led_control_->LedsSendColorBuffer(fl_buffer, color_buffer_fl, req.front_left.color.size());
 
     //front_right
     COLOR color_buffer_fr[req.front_right.color.size()];
-    memcpy(color_buffer_fr, req.front_right.color.data(), sizeof(req.front_right.color.data()));
+    memcpy(color_buffer_fr, req.front_right.color.data(), req.front_right.color.size()*sizeof(COLOR));
     led_control_->LedsSendColorBuffer(fr_buffer, color_buffer_fr, req.front_right.color.size());
 
     //rear_left
     COLOR color_buffer_rl[req.rear_left.color.size()];
-    memcpy(color_buffer_rl, req.rear_left.color.data(), sizeof(req.rear_left.color.data()));
+    memcpy(color_buffer_rl, req.rear_left.color.data(), req.rear_left.color.size()*sizeof(COLOR));
     led_control_->LedsSendColorBuffer(rl_buffer, color_buffer_rl, req.rear_left.color.size());
 
     //rear_right
     COLOR color_buffer_rr[req.rear_right.color.size()];
-    memcpy(color_buffer_rr, req.rear_right.color.data(), sizeof(req.rear_right.color.data()));
+    memcpy(color_buffer_rr, req.rear_right.color.data(), req.rear_right.color.size()*sizeof(COLOR));
     led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rr, req.rear_right.color.size());
 
     //additional
     if(req.enable_add)
     {
         COLOR color_buffer_ad[req.add.color.size()];
-        memcpy(color_buffer_ad, req.add.color.data(), sizeof(req.add.color.data()));
+        memcpy(color_buffer_ad, req.add.color.data(), req.add.color.size()*sizeof(COLOR));
         led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_ad, req.add.color.size());
     }
 

@@ -94,13 +94,13 @@ void Control::HandleFlightModeEffect(uint64_t ticks)
 
     if((ticks - tick_offset) % 4 == 0)
     {
-        front_switcher = ~front_switcher;
+        front_switcher = !front_switcher;
         update_color = true;
     }
 
     if((ticks - tick_offset) % 8 == 0)
     {
-        rear_switcher = ~rear_switcher;
+        rear_switcher = !rear_switcher;
         update_color = true;
     }
 

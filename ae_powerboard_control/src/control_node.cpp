@@ -5,6 +5,7 @@ Control::Control(const ros::NodeHandle &nh)
 {
     this->Init();
     this->SetupServices();
+    this->SetupTimers();
     this->GetAll();
 }
 
@@ -24,7 +25,9 @@ void Control::Init()
 void Control::DefaultValues()
 {
     drone_control_ = new Pb6s40aDroneControl(i2c_driver_);
+    led_control_ = new Pb6s40aLedsControl(i2c_driver_);
     esc_device_info_status_ = 0x00;
+    led_effect_run_ = false;
 }
 
 void Control::SetupServices()
@@ -35,6 +38,288 @@ void Control::SetupServices()
     esc_data_log_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_data_log", &Control::CallbackEscDataLog, this);
     esc_resistance_srv_ = nh_.advertiseService("/ae_powerboard_control/esc/get_resistance", &Control::CallbackEscResistance, this);
     board_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/board/get_dev_info", &Control::CallbackBoardDeviceInfo, this);
+    led_set_custom_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_color", &Control::CallbackLedCustomColor, this);
+    led_set_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_color", &Control::CallbackLedColor, this);
+    led_set_custom_effect_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_effect", &Control::CallbackLedCustomEffect, this);
+    led_set_effect_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_effect", &Control::CallbackLedEffect, this);
+}
+
+void Control::SetupTimers()
+{
+    main_tim_ = nh_.createTimer(ros::Duration(MAIN_TIME_PERIOD_S), &Control::CallbackMainTimer, this);
+}
+
+void Control::CallbackMainTimer(const ros::TimerEvent &event)
+{
+    static uint64_t ticks = 0;
+
+    ticks++;
+    
+    if(!led_effect_run_)
+    {
+        return;
+    }
+
+    switch(led_effect_type_)
+    {
+        case NO_EFFECT:
+            this->HandleNoEffect(ticks);
+            break;
+        case EFFECT_1:
+            this->HandleEffect_1(ticks);
+            break;
+    }
+    
+}
+
+void Control::HandleEffect_1(uint64_t ticks)
+{
+    static bool front_switcher = false;
+    static bool rear_switcher = false;
+    static uint64_t tick_offset = 0;
+    static COLOR color_buffer_front_d[LED_COUNT_EFFECT] = {WHITE, WHITE, WHITE, WHITE, OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR};
+    static COLOR color_buffer_front_r[LED_COUNT_EFFECT] = {OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR, WHITE, WHITE, WHITE, WHITE};
+    static COLOR color_buffer_rear_d[LED_COUNT_EFFECT] = {RED, RED, RED, RED, OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR};
+    static COLOR color_buffer_rear_r[LED_COUNT_EFFECT] = {OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR, RED, RED, RED, RED};
+
+    bool update_color = false;
+
+    if(led_effect_update_)
+    {
+        tick_offset = ticks;
+        front_switcher = false;
+        rear_switcher = false;
+
+        led_effect_update_ = false;
+    }
+
+    if((ticks - tick_offset) % 4 == 0)
+    {
+        front_switcher = !front_switcher;
+        update_color = true;
+    }
+
+    if((ticks - tick_offset) % 8 == 0)
+    {
+        rear_switcher = !rear_switcher;
+        update_color = true;
+    }
+
+    if(update_color)
+    {
+        led_control_->LedsSendColorBuffer(fl_buffer, (front_switcher ? color_buffer_front_d : color_buffer_front_r), LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(fr_buffer, (front_switcher ? color_buffer_front_d : color_buffer_front_r), LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(rl_buffer, (rear_switcher ? color_buffer_rear_d : color_buffer_rear_r), LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(rr_buffer, (rear_switcher ? color_buffer_rear_d : color_buffer_rear_r), LED_COUNT_EFFECT);
+
+        led_control_->LedsUpdate();
+    }
+}
+
+void Control::HandleNoEffect(uint64_t ticks)
+{
+    if(led_effect_update_)
+    {
+        //prepartion of color
+        COLOR color_buffer[LED_COUNT_EFFECT];
+        led_control_->LedsSetBufferWithOneColor(color_buffer, OFFCOLOR, LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(fl_buffer, color_buffer, LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(fr_buffer, color_buffer, LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(rl_buffer, color_buffer, LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(rr_buffer, color_buffer, LED_COUNT_EFFECT);
+        
+        //update led buffer
+        led_control_->LedsUpdate();
+
+        led_effect_update_ = false;
+    }
+}
+
+bool Control::CallbackLedColor(ae_powerboard_control::SetLedColor::Request &req, ae_powerboard_control::SetLedColor::Response &res)
+{
+    if(i2c_error_)
+    {
+        res.success = false;
+        return true;
+    }
+
+    //turn off predefinned effect
+    led_effect_run_ = false;
+    led_control_->LedsSwitchPredefinedEffect(false);
+    
+    //update led count
+    LEDS_COUNT leds_count;
+    led_control_->LedsGetLedsCount(leds_count);
+    leds_count.fl_leds_count = req.leds_count;
+    leds_count.fr_leds_count = req.leds_count;
+    leds_count.rl_leds_count = req.leds_count;
+    leds_count.rr_leds_count = req.leds_count;
+    if(req.enable_add)
+    {
+        leds_count.ad_leds_count = req.leds_add_count;
+    }
+    led_control_->LedsSetLedsCount(leds_count);
+    
+    //front_left
+    COLOR color_buffer_fl[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fl, *((COLOR*)&req.leds_color), req.leds_count);
+    led_control_->LedsSendColorBuffer(fl_buffer, color_buffer_fl, req.leds_count);
+
+    //front_right
+    COLOR color_buffer_fr[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fr, *((COLOR*)&req.leds_color), req.leds_count);
+    led_control_->LedsSendColorBuffer(fr_buffer, color_buffer_fr, req.leds_count);
+
+    //rear_left
+    COLOR color_buffer_rl[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rl, *((COLOR*)&req.leds_color), req.leds_count);
+    led_control_->LedsSendColorBuffer(rl_buffer, color_buffer_rl, req.leds_count);
+
+    //rear_right
+    COLOR color_buffer_rr[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rr, *((COLOR*)&req.leds_color), req.leds_count);
+    led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rr, req.leds_count);
+
+    //additional
+    if(req.enable_add)
+    {
+        COLOR color_buffer_ad[req.leds_count];
+        led_control_->LedsSetBufferWithOneColor(color_buffer_ad, *((COLOR*)&req.add_color), req.leds_add_count);
+        led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_ad, req.leds_add_count);
+    }
+
+    //update led buffer
+    led_control_->LedsUpdate();
+
+    res.success = true;
+    return true;
+}
+
+bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::Request &req, ae_powerboard_control::SetLedCustomColor::Response &res)
+{
+    if(i2c_error_)
+    {
+        res.success = false;
+        return true;
+    }
+
+    //turn off predefinned effect
+    led_effect_run_ = false;
+    led_control_->LedsSwitchPredefinedEffect(false);
+    
+    //update led count
+    LEDS_COUNT leds_count;
+    led_control_->LedsGetLedsCount(leds_count);
+    leds_count.fl_leds_count = req.front_left.color.size();
+    leds_count.fr_leds_count = req.front_right.color.size();
+    leds_count.rl_leds_count = req.rear_left.color.size();
+    leds_count.rr_leds_count = req.rear_right.color.size();
+    if(req.enable_add)
+    {
+        leds_count.ad_leds_count = req.add.color.size();
+    }
+    led_control_->LedsSetLedsCount(leds_count);
+
+    //front_left
+    COLOR color_buffer_fl[req.front_left.color.size()];
+    memcpy(color_buffer_fl, req.front_left.color.data(), req.front_left.color.size()*sizeof(COLOR));
+    led_control_->LedsSendColorBuffer(fl_buffer, color_buffer_fl, req.front_left.color.size());
+
+    //front_right
+    COLOR color_buffer_fr[req.front_right.color.size()];
+    memcpy(color_buffer_fr, req.front_right.color.data(), req.front_right.color.size()*sizeof(COLOR));
+    led_control_->LedsSendColorBuffer(fr_buffer, color_buffer_fr, req.front_right.color.size());
+
+    //rear_left
+    COLOR color_buffer_rl[req.rear_left.color.size()];
+    memcpy(color_buffer_rl, req.rear_left.color.data(), req.rear_left.color.size()*sizeof(COLOR));
+    led_control_->LedsSendColorBuffer(rl_buffer, color_buffer_rl, req.rear_left.color.size());
+
+    //rear_right
+    COLOR color_buffer_rr[req.rear_right.color.size()];
+    memcpy(color_buffer_rr, req.rear_right.color.data(), req.rear_right.color.size()*sizeof(COLOR));
+    led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rr, req.rear_right.color.size());
+
+    //additional
+    if(req.enable_add)
+    {
+        COLOR color_buffer_ad[req.add.color.size()];
+        memcpy(color_buffer_ad, req.add.color.data(), req.add.color.size()*sizeof(COLOR));
+        led_control_->LedsSendColorBuffer(ad_buffer, color_buffer_ad, req.add.color.size());
+    }
+
+    //update led buffercolor_buffer_rr
+    led_control_->LedsUpdate();
+
+    res.success = true;
+    return true;
+}
+
+bool Control::CallbackLedEffect(ae_powerboard_control::SetLedEffect::Request &req, ae_powerboard_control::SetLedEffect::Response &res)
+{
+    //turn off predefinned effect
+    led_effect_run_ = false;
+    led_control_->LedsSwitchPredefinedEffect(false);
+
+    //update led count
+    LEDS_COUNT leds_count;
+    led_control_->LedsGetLedsCount(leds_count);
+    leds_count.fl_leds_count = LED_COUNT_EFFECT;
+    leds_count.fr_leds_count = LED_COUNT_EFFECT;
+    leds_count.rl_leds_count = LED_COUNT_EFFECT;
+    leds_count.rr_leds_count = LED_COUNT_EFFECT;
+    led_control_->LedsSetLedsCount(leds_count);
+
+    led_effect_type_ = req.effect_type;
+    led_effect_run_ = true;
+    led_effect_update_ = true;
+
+    res.success = true;
+    return true;
+}
+
+bool Control::CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res)
+{
+    //turn off predefinned effect
+    led_effect_run_ = false;
+    led_control_->LedsSwitchPredefinedEffect(false);
+
+    //update led count
+    LEDS_COUNT leds_count;
+    led_control_->LedsGetLedsCount(leds_count);
+    leds_count.fl_leds_count = req.leds_count;
+    leds_count.fr_leds_count = req.leds_count;
+    leds_count.rl_leds_count = req.leds_count;
+    leds_count.rr_leds_count = req.leds_count;
+    led_control_->LedsSetLedsCount(leds_count);
+
+    //front_left
+    COLOR color_buffer_fl[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fl, *((COLOR*)&req.front_left), req.leds_count);
+
+    //front_right
+    COLOR color_buffer_fr[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_fr, *((COLOR*)&req.front_right), req.leds_count);
+
+    //rear_leftcolor_buffer_rr
+    COLOR color_buffer_rl[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rl, *((COLOR*)&req.rear_left), req.leds_count);
+
+    //rear_right
+    COLOR color_buffer_rr[req.leds_count];
+    led_control_->LedsSetBufferWithOneColor(color_buffer_rr, *((COLOR*)&req.rear_right), req.leds_count);
+
+    //set predefined effect
+    led_control_->LedsSetPredefinedEffect(*((COLOR*)&req.front_left), *((COLOR*)&req.front_right), *((COLOR*)&req.rear_left), *((COLOR*)&req.rear_right), req.on_led_cycles, req.off_led_cycles, req.effect_type, req.set_default);
+
+    //update led buffer
+    led_control_->LedsUpdate();
+
+    //turn on predefinned effect
+    led_control_->LedsSwitchPredefinedEffect(true);
+
+    res.success = true;
+    return true;
 }
 
 bool Control::CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res)

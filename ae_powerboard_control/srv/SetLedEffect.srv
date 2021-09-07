@@ -1,0 +1,5 @@
+uint8 effect_type
+uint8 NO_EFFECT = 0
+uint8 FLIGHT_MODE = 1
+---
+bool success

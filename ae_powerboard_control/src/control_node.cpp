@@ -77,9 +77,11 @@ void Control::HandleFlightModeEffect(uint64_t ticks)
     static bool rear_switcher = false;
     static uint64_t tick_offset = 0;
     static COLOR color_buffer_front_d[LED_COUNT_EFFECT] = {WHITE, WHITE, WHITE, WHITE, OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR};
-    static COLOR color_buffer_front_r[LED_COUNT_EFFECT] = {RED, RED, RED, RED, OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR};
-    static COLOR color_buffer_rear_d[LED_COUNT_EFFECT] = {WHITE, WHITE, WHITE, WHITE, OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR};
+    static COLOR color_buffer_front_r[LED_COUNT_EFFECT] = {OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR, WHITE, WHITE, WHITE, WHITE};
+    static COLOR color_buffer_rear_d[LED_COUNT_EFFECT] = {RED, RED, RED, RED, OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR};
     static COLOR color_buffer_rear_r[LED_COUNT_EFFECT] = {OFFCOLOR, OFFCOLOR, OFFCOLOR, OFFCOLOR, RED, RED, RED, RED};
+
+    bool update_color = false;
 
     if(led_effect_update_)
     {
@@ -92,36 +94,26 @@ void Control::HandleFlightModeEffect(uint64_t ticks)
 
     if((ticks - tick_offset) % 4 == 0)
     {
-        if(front_switcher)
-        {
-            led_control_->LedsSendColorBuffer(fl_buffer, color_buffer_front_d, LED_COUNT_EFFECT);
-            led_control_->LedsSendColorBuffer(fr_buffer, color_buffer_front_d, LED_COUNT_EFFECT);
-        }
-        else
-        {
-            led_control_->LedsSendColorBuffer(fl_buffer, color_buffer_front_r, LED_COUNT_EFFECT);
-            led_control_->LedsSendColorBuffer(fr_buffer, color_buffer_front_r, LED_COUNT_EFFECT);
-        }
-        front_switcher != front_switcher;
-
+        front_switcher = ~front_switcher;
+        update_color = true;
     }
 
     if((ticks - tick_offset) % 8 == 0)
     {
-        if(front_switcher)
-        {
-            led_control_->LedsSendColorBuffer(rl_buffer, color_buffer_rear_d, LED_COUNT_EFFECT);
-            led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rear_d, LED_COUNT_EFFECT);
-        }
-        else
-        {
-            led_control_->LedsSendColorBuffer(rl_buffer, color_buffer_rear_r, LED_COUNT_EFFECT);
-            led_control_->LedsSendColorBuffer(rr_buffer, color_buffer_rear_r, LED_COUNT_EFFECT);
-        }
-        rear_switcher != rear_switcher;
+        rear_switcher = ~rear_switcher;
+        update_color = true;
     }
 
-    led_control_->LedsUpdate();
+    if(update_color)
+    {
+        led_control_->LedsSendColorBuffer(fl_buffer, (front_switcher ? color_buffer_front_d : color_buffer_front_r), LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(fr_buffer, (front_switcher ? color_buffer_front_d : color_buffer_front_r), LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(rl_buffer, (rear_switcher ? color_buffer_rear_d : color_buffer_rear_r), LED_COUNT_EFFECT);
+        led_control_->LedsSendColorBuffer(rr_buffer, (rear_switcher ? color_buffer_rear_d : color_buffer_rear_r), LED_COUNT_EFFECT);
+
+        led_control_->LedsUpdate();
+    }
+    
 
 }
 

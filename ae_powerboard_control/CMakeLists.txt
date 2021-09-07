@@ -56,6 +56,7 @@ add_message_files(
   ErrorWarn.msg
   EscErrorLog.msg
   EscDataLog.msg
+  EscResistance.msg
   BoardDeviceInfo.msg
   Color.msg
   LedChannel.msg
@@ -67,6 +68,7 @@ add_service_files(
   GetEscDeviceInfo.srv
   GetEscErrorLog.srv
   GetEscDataLog.srv
+  GetEscResistance.srv
   GetBoardDeviceInfo.srv
   SetLedColor.srv
   SetLedCustomColor.srv

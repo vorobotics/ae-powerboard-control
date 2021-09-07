@@ -15,6 +15,7 @@
 #include "ae_powerboard_control/SetLedCustomColor.h"
 #include "ae_powerboard_control/SetLedEffect.h"
 #include "ae_powerboard_control/SetLedCustomEffect.h"
+#include "ae_powerboard_control/GetEscResistance.h"
 
 #define DEVICE_I2C_NANO     "/dev/i2c-1"
 #define DEVICE_I2C_NX       "/dev/i2c-8"
@@ -38,6 +39,7 @@ class Control
         ros::ServiceServer esc_dev_info_srv_;
         ros::ServiceServer esc_error_log_srv_;
         ros::ServiceServer esc_data_log_srv_;
+        ros::ServiceServer esc_resistance_srv_;
         ros::ServiceServer board_dev_info_srv_;
         ros::ServiceServer led_set_custom_color_srv_;
         ros::ServiceServer led_set_color_srv_;
@@ -60,6 +62,9 @@ class Control
         //esc device info
         ADB_DEVICE_INFO esc_device_info_[4];
         uint8_t esc_device_info_status_;
+        //esc resistance 
+        RESISTANCE_STRUCT esc_resistance_[4];
+        uint8_t esc_restistance_status_;
         // **board**
         //board device info
         POWER_BOARD_INFO board_device_info_;
@@ -86,12 +91,14 @@ class Control
         void GetEscErrorLog();
         void GetEscDataLog();
         void GetEscDeviceInfo();
+        void GetEscResistance();
         //Board
         void GetBoardDeviceInfo();
         //Callback for service
         bool CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res);
         bool CallbackEscErrorLog(ae_powerboard_control::GetEscErrorLog::Request &req, ae_powerboard_control::GetEscErrorLog::Response &res);
         bool CallbackEscDataLog(ae_powerboard_control::GetEscDataLog::Request &req, ae_powerboard_control::GetEscDataLog::Response &res);
+        bool CallbackEscResistance(ae_powerboard_control::GetEscResistance::Request &req, ae_powerboard_control::GetEscResistance::Response &res);
         bool CallbackBoardDeviceInfo(ae_powerboard_control::GetBoardDeviceInfo::Request &req, ae_powerboard_control::GetBoardDeviceInfo::Response &res);
         bool CallbackLedColor(ae_powerboard_control::SetLedColor::Request &req, ae_powerboard_control::SetLedColor::Response &res);
         bool CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::Request &req, ae_powerboard_control::SetLedCustomColor::Response &res);

@@ -64,14 +64,14 @@ void Control::CallbackMainTimer(const ros::TimerEvent &event)
         case NO_EFFECT:
             this->HandleNoEffect(ticks);
             break;
-        case FLIGHT_MODE:
-            this->HandleFlightModeEffect(ticks);
+        case EFFECT_1:
+            this->HandleEffect_1(ticks);
             break;
     }
     
 }
 
-void Control::HandleFlightModeEffect(uint64_t ticks)
+void Control::HandleEffect_1(uint64_t ticks)
 {
     static bool front_switcher = false;
     static bool rear_switcher = false;
@@ -113,8 +113,6 @@ void Control::HandleFlightModeEffect(uint64_t ticks)
 
         led_control_->LedsUpdate();
     }
-    
-
 }
 
 void Control::HandleNoEffect(uint64_t ticks)

@@ -29,7 +29,7 @@ class Control
         enum Effect_Type
         {
             NO_EFFECT = 0,
-            FLIGHT_MODE = 1,
+            EFFECT_1 = 1,
         };
         //  ******* properties ********
         // ros node
@@ -101,7 +101,7 @@ class Control
         void CallbackMainTimer(const ros::TimerEvent &event);
         //Led effect
         void HandleNoEffect(uint64_t ticks);
-        void HandleFlightModeEffect(uint64_t ticks);
+        void HandleEffect_1(uint64_t ticks);
     
     public:
         // constructor

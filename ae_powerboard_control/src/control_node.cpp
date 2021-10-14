@@ -1,7 +1,8 @@
 #include "control_node.hpp"
 
-Control::Control(const ros::NodeHandle &nh)
-    :nh_(nh)
+Control::Control(const ros::NodeHandle &nh, std::string i2c_address)
+    :nh_(nh),
+     i2c_address_(i2c_address)
 {
     this->Init();
     this->SetupServices();
@@ -412,13 +413,12 @@ bool Control::CallbackEscResistance(ae_powerboard_control::GetEscResistance::Req
 
 void Control::OpenI2C()
 {
-    std::string device(DEVICE_I2C_NANO);
 
-    i2c_error_ = i2c_driver_.I2cOpen(device.c_str());
+    i2c_error_ = i2c_driver_.I2cOpen(i2c_address_.c_str());
 
     if(i2c_error_)
     {
-        throw (std::string("I2C error happens when opening port: ") + device.c_str());
+        throw (std::string("I2C error happens when opening port: ") + i2c_address_.c_str());
     }
 }
 
@@ -568,8 +568,16 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "pb_control_node");
     ros::NodeHandle n;
+    
+    std::string i2c_addr = DEVICE_I2C_NANO;
+
+    if(argc >= 2)
+    {
+        i2c_addr = argv[1];
+    }
+    ROS_INFO("I2C address: %s", i2c_addr.c_str());    
        
-    Control control(n);
+    Control control(n, i2c_addr);
 
     ros::AsyncSpinner spinner(4);
     spinner.start();

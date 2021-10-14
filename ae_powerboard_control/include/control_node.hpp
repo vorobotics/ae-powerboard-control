@@ -49,6 +49,7 @@ class Control
         ros::Timer main_tim_;
         //i2c
         I2CDriver i2c_driver_;
+        std::string i2c_address_;
         bool i2c_error_;
         Pb6s40aDroneControl *drone_control_;
         Pb6s40aLedsControl *led_control_;
@@ -112,7 +113,7 @@ class Control
     
     public:
         // constructor
-        Control(const ros::NodeHandle &nh);
+        Control(const ros::NodeHandle &nh, std::string i2c_address);
         ~Control();
 };
 

@@ -32,10 +32,15 @@ To build the code execute:
 ## Running the code on DroneCore.Suite
 
 Run roscore in separate terminal window:
+
     roscore
+
 Launch control.launch in separate terminal window:
+
     roslaunch ae-powerboard-control control.launch
+
 Run one of the following examples:
+
     rosrun ae-powerboard-control example_
 
 

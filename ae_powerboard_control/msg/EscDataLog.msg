@@ -1,0 +1,7 @@
+uint8 esc_number
+float32 motor_max_is
+float32 motor_avg_is
+uint8 esc_max_temp
+uint8 motor_max_temp
+bool valid
+uint8 diagnostic_status

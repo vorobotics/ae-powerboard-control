@@ -1,14 +1,18 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(ae_powerboard_control)
 
+## Link tomsense linux driver
+add_subdirectory(modules/STM_Jetson_I2C_driver)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -45,18 +49,32 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  Fw.msg
+  EscDeviceInfo.msg
+  ErrorWarn.msg
+  EscErrorLog.msg
+  EscDataLog.msg
+  EscResistance.msg
+  BoardDeviceInfo.msg
+  Color.msg
+  LedChannel.msg
+)
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  GetEscDeviceInfo.srv
+  GetEscErrorLog.srv
+  GetEscDataLog.srv
+  GetEscResistance.srv
+  GetBoardDeviceInfo.srv
+  SetLedColor.srv
+  SetLedCustomColor.srv
+  SetLedPredefinedEffect.srv
+  SetLedCustomEffect.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -66,10 +84,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  # std_msgs  # Or other packages containing msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -101,9 +119,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES ae_powerboard_control
-#  CATKIN_DEPENDS roscpp
+ INCLUDE_DIRS include
+ LIBRARIES ae_powerboard_control
+ CATKIN_DEPENDS roscpp
+ DEPENDS message_runtime
 #  DEPENDS system_lib
 )
 
@@ -114,8 +133,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  modules/STM_Jetson_I2C_driver/include
 )
 
 ## Declare a C++ library
@@ -132,12 +152,22 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/ae_powerboard_control_node.cpp)
+add_executable(control_node src/control_node.cpp)
+add_executable(example_led_custom_color src/example_led_custom_color.cpp)
+add_executable(example_led_one_color src/example_led_one_color.cpp)
+add_executable(example_set_custom_effect src/example_set_custom_effect.cpp)
+add_executable(example_set_predefined_effect src/example_set_predefined_effect.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+add_dependencies(control_node ae_powerboard_control_generate_messages_cpp)
+add_dependencies(example_led_custom_color ae_powerboard_control_generate_messages_cpp)
+add_dependencies(example_led_one_color ae_powerboard_control_generate_messages_cpp)
+add_dependencies(example_set_custom_effect ae_powerboard_control_generate_messages_cpp)
+add_dependencies(example_set_predefined_effect ae_powerboard_control_generate_messages_cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -147,6 +177,11 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(control_node ${catkin_LIBRARIES} i2c_driver pb6s40a_control)
+target_link_libraries(example_led_custom_color ${catkin_LIBRARIES})
+target_link_libraries(example_led_one_color ${catkin_LIBRARIES})
+target_link_libraries(example_set_custom_effect ${catkin_LIBRARIES})
+target_link_libraries(example_set_predefined_effect ${catkin_LIBRARIES})
 
 #############
 ## Install ##

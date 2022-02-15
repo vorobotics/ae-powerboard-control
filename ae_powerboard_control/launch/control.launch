@@ -1,0 +1,4 @@
+<launch>
+    <arg name="pb_i2c_addr" default="$(env PB_I2C_ADDR)"/>
+    <node pkg="ae_powerboard_control" type="control_node" name="pw_control_node" args="$(arg pb_i2c_addr)" output="screen"/>
+</launch>

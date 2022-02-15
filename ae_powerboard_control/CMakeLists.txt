@@ -72,8 +72,8 @@ add_service_files(
   GetBoardDeviceInfo.srv
   SetLedColor.srv
   SetLedCustomColor.srv
+  SetLedPredefinedEffect.srv
   SetLedCustomEffect.srv
-  SetLedEffect.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -153,6 +153,10 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/ae_powerboard_control_node.cpp)
 add_executable(control_node src/control_node.cpp)
+add_executable(example_led_custom_color src/example_led_custom_color.cpp)
+add_executable(example_led_one_color src/example_led_one_color.cpp)
+add_executable(example_set_custom_effect src/example_set_custom_effect.cpp)
+add_executable(example_set_predefined_effect src/example_set_predefined_effect.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -160,6 +164,10 @@ add_executable(control_node src/control_node.cpp)
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
 add_dependencies(control_node ae_powerboard_control_generate_messages_cpp)
+add_dependencies(example_led_custom_color ae_powerboard_control_generate_messages_cpp)
+add_dependencies(example_led_one_color ae_powerboard_control_generate_messages_cpp)
+add_dependencies(example_set_custom_effect ae_powerboard_control_generate_messages_cpp)
+add_dependencies(example_set_predefined_effect ae_powerboard_control_generate_messages_cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -170,6 +178,10 @@ add_dependencies(control_node ae_powerboard_control_generate_messages_cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(control_node ${catkin_LIBRARIES} i2c_driver pb6s40a_control)
+target_link_libraries(example_led_custom_color ${catkin_LIBRARIES})
+target_link_libraries(example_led_one_color ${catkin_LIBRARIES})
+target_link_libraries(example_set_custom_effect ${catkin_LIBRARIES})
+target_link_libraries(example_set_predefined_effect ${catkin_LIBRARIES})
 
 #############
 ## Install ##

@@ -1,18 +1,7 @@
-uint8 leds_count
-
-uint8 on_led_cycles # cycle duration is 25ms
-uint8 off_led_cycles # cycle duration is 25ms
-
 uint8 effect_type
 uint8 NO_EFFECT = 0
-uint8 TOGGLING_EFFECT = 1
-uint8 CIRCLE_EFFECT = 2
+uint8 FLIGHT_MODE = 1
 
-ae_powerboard_control/Color front_left
-ae_powerboard_control/Color front_right
-ae_powerboard_control/Color rear_left
-ae_powerboard_control/Color rear_right
-
-bool set_default
+bool kill_predefined_effect
 ---
 bool success

@@ -41,8 +41,8 @@ void Control::SetupServices()
     board_dev_info_srv_ = nh_.advertiseService("/ae_powerboard_control/board/get_dev_info", &Control::CallbackBoardDeviceInfo, this);
     led_set_custom_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_color", &Control::CallbackLedCustomColor, this);
     led_set_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_color", &Control::CallbackLedColor, this);
+    led_set_predefined_effect_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_predefined_effect", &Control::CallbackLedPredefinedEffect, this);
     led_set_custom_effect_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_effect", &Control::CallbackLedCustomEffect, this);
-    led_set_effect_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_effect", &Control::CallbackLedEffect, this);
 }
 
 void Control::SetupTimers()
@@ -69,6 +69,7 @@ void Control::CallbackMainTimer(const ros::TimerEvent &event)
         case EFFECT_1:
             this->HandleEffect_1(ticks);
             break;
+        /*Add handling of user custom effects*/    
     }
     
 }
@@ -256,11 +257,14 @@ bool Control::CallbackLedCustomColor(ae_powerboard_control::SetLedCustomColor::R
     return true;
 }
 
-bool Control::CallbackLedEffect(ae_powerboard_control::SetLedEffect::Request &req, ae_powerboard_control::SetLedEffect::Response &res)
+bool Control::CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res)
 {
     //turn off predefinned effect
     led_effect_run_ = false;
-    led_control_->LedsSwitchPredefinedEffect(false);
+    if(req.kill_predefined_effect)  
+    {
+        led_control_->LedsSwitchPredefinedEffect(false);
+    }    
 
     //update led count
     LEDS_COUNT leds_count;
@@ -279,7 +283,7 @@ bool Control::CallbackLedEffect(ae_powerboard_control::SetLedEffect::Request &re
     return true;
 }
 
-bool Control::CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res)
+bool Control::CallbackLedPredefinedEffect(ae_powerboard_control::SetLedPredefinedEffect::Request &req, ae_powerboard_control::SetLedPredefinedEffect::Response &res)
 {
     //turn off predefinned effect
     led_effect_run_ = false;

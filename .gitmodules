@@ -1,3 +1,3 @@
 [submodule "ae_powerboard_control/modules/STM_Jetson_I2C_driver"]
 	path = ae_powerboard_control/modules/STM_Jetson_I2C_driver
-	url = https://gitlab.com/aerobtec-drones/stm_jetson_i2c_driver.git
+	url = https://github.com/airvolute/STM_Jetson_I2C_driver.git

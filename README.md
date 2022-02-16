@@ -24,9 +24,9 @@ To build the code execute:
 
     source catkin_ws/devel/setup.bash
 
-    catkin clean ae-powerboard-control
+    catkin clean ae_powerboard_control
 
-    catkin build ae-powerboard-control
+    catkin build ae_powerboard_control
 
 
 ## Running the code on DroneCore.Suite
@@ -37,10 +37,13 @@ Run roscore in separate terminal window:
 
 Launch control.launch in separate terminal window:
 
-    roslaunch ae-powerboard-control control.launch
+    roslaunch ae_powerboard_control control.launch
 
 Run one of the following examples:
 
-    rosrun ae-powerboard-control example_
+    rosrun ae_powerboard_control example_led_custom_color
+    rosrun ae_powerboard_control example_led_one_color
+    rosrun ae_powerboard_control example_set_predefined_effect
+    rosrun ae_powerboard_control example_set_custom_effect	
 
 

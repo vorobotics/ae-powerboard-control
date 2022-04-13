@@ -10,6 +10,7 @@
 #include "i2c_driver.h" 
 #include "pb6s40a_control.h"
 
+#include "std_srvs/SetBool.h"
 #include "ae_powerboard_control/GetEscDeviceInfo.h"
 #include "ae_powerboard_control/GetBoardDeviceInfo.h"
 #include "ae_powerboard_control/GetEscErrorLog.h"
@@ -49,6 +50,7 @@ class Control
         ros::ServiceServer led_set_color_srv_;
         ros::ServiceServer led_set_custom_effect_srv_;
         ros::ServiceServer led_set_predefined_effect_srv_;
+        ros::ServiceServer board_shutdown_srv_;
         // ros timers
         ros::Timer main_tim_;
         ros::Timer state_tim_;
@@ -102,6 +104,7 @@ class Control
         void GetEscResistance();
         //Board
         void GetBoardDeviceInfo();
+        bool CallbackBoardShutdown(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
         //Callback for service
         bool CallbackEscDeviceInfo(ae_powerboard_control::GetEscDeviceInfo::Request &req, ae_powerboard_control::GetEscDeviceInfo::Response &res);
         bool CallbackEscErrorLog(ae_powerboard_control::GetEscErrorLog::Request &req, ae_powerboard_control::GetEscErrorLog::Response &res);

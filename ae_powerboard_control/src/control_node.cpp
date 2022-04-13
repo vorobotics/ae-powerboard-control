@@ -44,6 +44,7 @@ void Control::SetupServices()
     led_set_color_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_color", &Control::CallbackLedColor, this);
     led_set_predefined_effect_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_predefined_effect", &Control::CallbackLedPredefinedEffect, this);
     led_set_custom_effect_srv_ = nh_.advertiseService("/ae_powerboard_control/led/set_custom_effect", &Control::CallbackLedCustomEffect, this);
+    board_shutdown_srv_ = nh_.advertiseService("/ae_powerboard_control/board/shutdown", &Control::CallbackBoardShutdown, this);
 }
 
 void Control::SetupTimers()
@@ -103,6 +104,15 @@ void Control::CallbackStateTimer(const ros::TimerEvent &event)
             sync();
             reboot(LINUX_REBOOT_CMD_POWER_OFF);
         }
+    }
+}
+
+bool Control::CallbackBoardShutdown(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
+{
+    if (req.data)
+    {
+        ROS_WARN("Shutdown is activated.");
+        drone_control_->DroneTurnOff();
     }
 }
 

@@ -111,9 +111,25 @@ bool Control::CallbackBoardShutdown(std_srvs::SetBool::Request &req, std_srvs::S
 {
     if (req.data)
     {
-        ROS_WARN("Shutdown is activated.");
-        drone_control_->DroneTurnOff();
+        uint8_t status = drone_control_->DroneTurnOff();
+        if(status)
+        {
+            ROS_ERROR("Board shutdown - problem writing data");
+            res.success = false;
+            res.message = "Problem writing data."
+        }
+        else
+        {
+            ROS_WARN("Shutdown is activated.");
+            res.success = true;
+        } 
     }
+    else
+    {
+        res.success = false;
+        res.message = "Shutdown in service is disabled."
+    }
+    return true;
 }
 
 void Control::HandleEffect_1(uint64_t ticks)

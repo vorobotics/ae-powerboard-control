@@ -3,6 +3,9 @@
 
 #include "ros/ros.h"
 
+#include <linux/reboot.h>
+#include <sys/reboot.h>
+
 #include "utils.hpp"
 #include "i2c_driver.h" 
 #include "pb6s40a_control.h"
@@ -21,6 +24,7 @@
 #define DEVICE_I2C_NX       "/dev/i2c-8"
 
 #define MAIN_TIME_PERIOD_S  0.05
+#define STATE_TIME_PERIOD_S 1
 #define LED_COUNT_EFFECT    8
 
 class Control
@@ -47,9 +51,10 @@ class Control
         ros::ServiceServer led_set_predefined_effect_srv_;
         // ros timers
         ros::Timer main_tim_;
+        ros::Timer state_tim_;
         //i2c
         I2CDriver i2c_driver_;
-        std::string i2c_address_;
+        std::string i2c_port_;
         bool i2c_error_;
         Pb6s40aDroneControl *drone_control_;
         Pb6s40aLedsControl *led_control_;
@@ -76,6 +81,8 @@ class Control
         bool led_effect_run_;
         bool led_effect_update_;
         uint8_t led_effect_type_;
+        //board status
+        uint8_t power_board_status_;
 
         //  ******* methods *******
         // init
@@ -107,6 +114,7 @@ class Control
         bool CallbackLedCustomEffect(ae_powerboard_control::SetLedCustomEffect::Request &req, ae_powerboard_control::SetLedCustomEffect::Response &res);
         //Callback for timer
         void CallbackMainTimer(const ros::TimerEvent &event);
+        void CallbackStateTimer(const ros::TimerEvent &event);
         //Led effect
         void HandleNoEffect(uint64_t ticks);
         void HandleEffect_1(uint64_t ticks);

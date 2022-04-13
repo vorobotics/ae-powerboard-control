@@ -2,7 +2,7 @@
 
 Control::Control(const ros::NodeHandle &nh, std::string i2c_address)
     :nh_(nh),
-     i2c_address_(i2c_address)
+     i2c_port_(i2c_address)
 {
     this->Init();
     this->SetupServices();
@@ -25,10 +25,11 @@ void Control::Init()
 
 void Control::DefaultValues()
 {
-    drone_control_ = new Pb6s40aDroneControl(i2c_driver_);
-    led_control_ = new Pb6s40aLedsControl(i2c_driver_);
+    drone_control_ = new Pb6s40aDroneControl(i2c_driver_, I2C2_MAIN_BOARD_ADDRESS);
+    led_control_ = new Pb6s40aLedsControl(i2c_driver_, I2C2_MAIN_BOARD_ADDRESS);
     esc_device_info_status_ = 0x00;
     led_effect_run_ = false;
+    power_board_status_ = program_state_run;
 }
 
 void Control::SetupServices()
@@ -48,6 +49,7 @@ void Control::SetupServices()
 void Control::SetupTimers()
 {
     main_tim_ = nh_.createTimer(ros::Duration(MAIN_TIME_PERIOD_S), &Control::CallbackMainTimer, this);
+    state_tim_ = nh_.createTimer(ros::Duration(MAIN_TIME_PERIOD_S), &Control::CallbackStateTimer, this);
 }
 
 void Control::CallbackMainTimer(const ros::TimerEvent &event)
@@ -71,7 +73,37 @@ void Control::CallbackMainTimer(const ros::TimerEvent &event)
             break;
         /*Add handling of user custom effects*/    
     }
-    
+}
+
+void Control::CallbackStateTimer(const ros::TimerEvent &event)
+{
+    static uint64_t ticks = 0;
+    static bool read_error = false;
+
+    uint8_t status = drone_control_->PowerBoardStatusGet(&power_board_status_);
+    if(status)
+    {
+        if(!read_error)
+        {
+            read_error = true;
+            ROS_ERROR("PowerBoard status - problem reading data");
+        }
+    }
+    else
+    {
+        if(read_error)
+        {
+            read_error = false;
+            ROS_WARN("PowerBoard status - problem reading data");
+        }
+        
+        if(power_board_status_ == program_state_turning_off)
+        {
+            ROS_WARN("PowerBoard is shutting down");
+            sync();
+            reboot(LINUX_REBOOT_CMD_POWER_OFF);
+        }
+    }
 }
 
 void Control::HandleEffect_1(uint64_t ticks)
@@ -418,11 +450,11 @@ bool Control::CallbackEscResistance(ae_powerboard_control::GetEscResistance::Req
 void Control::OpenI2C()
 {
 
-    i2c_error_ = i2c_driver_.I2cOpen(i2c_address_.c_str());
+    i2c_error_ = i2c_driver_.I2cOpen(i2c_port_.c_str());
 
     if(i2c_error_)
     {
-        throw (std::string("I2C error happens when opening port: ") + i2c_address_.c_str());
+        throw (std::string("I2C error happens when opening port: ") + i2c_port_.c_str());
     }
 }
 
@@ -573,15 +605,15 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "pb_control_node");
     ros::NodeHandle n;
     
-    std::string i2c_addr = DEVICE_I2C_NANO;
+    std::string i2c_port = DEVICE_I2C_NANO;
 
     if(argc >= 2)
     {
-        i2c_addr = argv[1];
+        i2c_port = argv[1];
     }
-    ROS_INFO("I2C address: %s", i2c_addr.c_str());    
+    ROS_INFO("I2C address: %s", i2c_port.c_str());    
        
-    Control control(n, i2c_addr);
+    Control control(n, i2c_port);
 
     ros::AsyncSpinner spinner(4);
     spinner.start();

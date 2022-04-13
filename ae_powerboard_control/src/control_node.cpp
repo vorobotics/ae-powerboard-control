@@ -116,7 +116,7 @@ bool Control::CallbackBoardShutdown(std_srvs::SetBool::Request &req, std_srvs::S
         {
             ROS_ERROR("Board shutdown - problem writing data");
             res.success = false;
-            res.message = "Problem writing data."
+            res.message = "Problem writing data.";
         }
         else
         {
@@ -127,7 +127,7 @@ bool Control::CallbackBoardShutdown(std_srvs::SetBool::Request &req, std_srvs::S
     else
     {
         res.success = false;
-        res.message = "Shutdown in service is disabled."
+        res.message = "Shutdown in service is disabled.";
     }
     return true;
 }

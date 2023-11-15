@@ -157,6 +157,7 @@ add_executable(example_led_custom_color src/example_led_custom_color.cpp)
 add_executable(example_led_one_color src/example_led_one_color.cpp)
 add_executable(example_set_custom_effect src/example_set_custom_effect.cpp)
 add_executable(example_set_predefined_effect src/example_set_predefined_effect.cpp)
+add_executable(mav_colors src/mav_colors.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -168,6 +169,7 @@ add_dependencies(example_led_custom_color ae_powerboard_control_generate_message
 add_dependencies(example_led_one_color ae_powerboard_control_generate_messages_cpp)
 add_dependencies(example_set_custom_effect ae_powerboard_control_generate_messages_cpp)
 add_dependencies(example_set_predefined_effect ae_powerboard_control_generate_messages_cpp)
+add_dependencies(mav_colors mav_colors_cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -182,6 +184,7 @@ target_link_libraries(example_led_custom_color ${catkin_LIBRARIES})
 target_link_libraries(example_led_one_color ${catkin_LIBRARIES})
 target_link_libraries(example_set_custom_effect ${catkin_LIBRARIES})
 target_link_libraries(example_set_predefined_effect ${catkin_LIBRARIES})
+target_link_libraries(mav_colors ${catkin_LIBRARIES})
 
 #############
 ## Install ##

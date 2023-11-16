@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="ae_powerboard_control" type="mav_colors" name="mav_colors_node" output="screen"/>
+</launch>

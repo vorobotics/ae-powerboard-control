@@ -1,31 +1,30 @@
 #include <ros/ros.h>
 #include <mavros_msgs/State.h>
-#include <mavros_msgs/EstimatorStatus.h>
+#include <mavros_msgs/GPSRAW.h>
 #include "ae_powerboard_control/SetLedCustomColor.h"
 
 #define LED_COUNT 3  
 #define LED_COUNT_ADD 0
 
 ros::ServiceClient ledSetCustomColorSrv;
-ros::NodeHandle nh;
-bool isArmed = false;
-bool ekfOk = false;
 
+bool isArmed = false;
+bool gpsOk = false;
 
 enum LedState {
     NONE,
     WARN,
     FLYING,
     READY
-}
+};
 LedState currentLedState = LedState::NONE;
 
 bool setLedWarn();
 bool setLedFlying();
 bool setLedReady();
 bool setLedCustomColor(ae_powerboard_control::SetLedCustomColor &customColor); 
-void stateCallback(const mavros_msgs/State::ConstPtr& msg);
-void estimatorStatusCallback(const mavros_msgs::EstimatorStatus::ConstPtr& msg);
+void stateCallback(const mavros_msgs::State::ConstPtr& msg);
+void gpsStatusCallback(const mavros_msgs::GPSRAW::ConstPtr& msg);
 
 bool setLedCustomColor(ae_powerboard_control::SetLedCustomColor &customColorCmd) 
 {
@@ -43,7 +42,6 @@ bool setLedCustomColor(ae_powerboard_control::SetLedCustomColor &customColorCmd)
     return true;
 }
 
-
 bool setLedWarn()
 {
     ae_powerboard_control::SetLedCustomColor setLedWarnCmd;
@@ -51,9 +49,9 @@ bool setLedWarn()
     setLedWarnCmd.request.enable_add = false;
 
     ae_powerboard_control::Color yellow;
-    color.r = 255;
-    color.g = 255;
-    color.b = 0;
+    yellow.r = 255;
+    yellow.g = 255;
+    yellow.b = 0;
 
     setLedWarnCmd.request.front_left.color.resize(LED_COUNT);
     std::fill(setLedWarnCmd.request.front_left.color.begin(), 
@@ -90,19 +88,19 @@ bool setLedFlying()
     setLedFlyingCmd.request.enable_add = false;
 
     ae_powerboard_control::Color white;
-    color.r = 255;
-    color.g = 255;
-    color.b = 255;
+    white.r = 255;
+    white.g = 255;
+    white.b = 255;
 
     ae_powerboard_control::Color red;
-    color.r = 255;
-    color.g = 0;
-    color.b = 0;
+    red.r = 255;
+    red.g = 0;
+    red.b = 0;
 
     ae_powerboard_control::Color green;
-    color.r = 0;
-    color.g = 255;
-    color.b = 0;
+    green.r = 0;
+    green.g = 255;
+    green.b = 0;
 
     setLedFlyingCmd.request.front_left.color.resize(LED_COUNT);
     std::fill(setLedFlyingCmd.request.front_left.color.begin(), 
@@ -139,14 +137,14 @@ bool setLedReady()
     setLedReadyCmd.request.enable_add = false;
 
     ae_powerboard_control::Color white;
-    color.r = 255;
-    color.g = 255;
-    color.b = 255;
+    white.r = 255;
+    white.g = 255;
+    white.b = 255;
 
     ae_powerboard_control::Color blue;
-    color.r = 0;
-    color.g = 0;
-    color.b = 255;
+    blue.r = 0;
+    blue.g = 0;
+    blue.b = 255;
 
     setLedReadyCmd.request.front_left.color.resize(LED_COUNT);
     std::fill(setLedReadyCmd.request.front_left.color.begin(), 
@@ -181,32 +179,36 @@ void stateCallback(const mavros_msgs::State::ConstPtr& msg) {
     isArmed = msg->armed;
     if (isArmed) {
         if(currentLedState != LedState::FLYING) {
+            ROS_INFO("Vehicle is flying");
             setLedFlying();
             currentLedState = LedState::FLYING;
         }
-    } else if (!isArmed && ekfOk) {
+    } else if (!isArmed && gpsOk) {
         if(currentLedState != LedState::READY) {
+            ROS_INFO("Vehicle is ready");
             setLedReady();
             currentLedState = LedState::READY;
         }
     } else {
         if(currentLedState != LedState::WARN) {
+            ROS_INFO("Vehicle is not ready");
             setLedWarn();
             currentLedState = LedState::WARN;
         }
     }
 }
 
-// Callback function for EKF status
-void estimatorStatusCallback(const mavros_msgs::EstimatorStatus::ConstPtr& msg) {
-    ekfOk = (msg->flags & mavros_msgs::EstimatorStatus::ESTIMATOR_PRED_POS_HORIZ_REL) != 0;
-    if (!isArmed && ekfOk) {
+void gpsStatusCallback(const mavros_msgs::GPSRAW::ConstPtr& msg) {
+    gpsOk = msg->fix_type >= 3;
+    if (!isArmed && gpsOk) {
         if(currentLedState != LedState::READY) {
+            ROS_INFO("Vehicle is ready");
             setLedReady();
             currentLedState = LedState::READY;
         }
-    } else if (!isArmed && !ekfOk) {
+    } else if (!isArmed && !gpsOk) {
         if(currentLedState != LedState::WARN) {
+            ROS_INFO("Vehicle is not ready");
             setLedWarn();
             currentLedState = LedState::WARN;
         }
@@ -217,6 +219,7 @@ void estimatorStatusCallback(const mavros_msgs::EstimatorStatus::ConstPtr& msg) 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "mav_colors");
+    ros::NodeHandle nh;
 
     ledSetCustomColorSrv = nh.serviceClient<ae_powerboard_control::SetLedCustomColor>("/ae_powerboard_control/led/set_custom_color");
     if (!ledSetCustomColorSrv.exists())
@@ -226,8 +229,8 @@ int main(int argc, char **argv)
     }
 
     ROS_INFO("Starting MAV_COLORS");
-    ros::Subscriber state_sub = nh.subscribe<mavros_msgs/State>("mavros/state", 10, stateCallback);
-    ros::Subscriber estimator_status_sub = nh.subscribe<mavros_msgs/EstimatorStatus>("mavros/estimator_status", 10, estimatorStatusCallback);
+    ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("mavros/state", 10, stateCallback);
+    ros::Subscriber gps_sub = nh.subscribe<mavros_msgs::GPSRAW>("mavros/gpsstatus/gps1/raw", 10, gpsStatusCallback);
     ros::spin();
     return EXIT_SUCCESS;
 }

@@ -12,6 +12,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  mavros
   message_generation
 )
 
@@ -121,7 +122,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ae_powerboard_control
- CATKIN_DEPENDS roscpp
+ CATKIN_DEPENDS roscpp mavros
  DEPENDS message_runtime
 #  DEPENDS system_lib
 )
@@ -169,7 +170,7 @@ add_dependencies(example_led_custom_color ae_powerboard_control_generate_message
 add_dependencies(example_led_one_color ae_powerboard_control_generate_messages_cpp)
 add_dependencies(example_set_custom_effect ae_powerboard_control_generate_messages_cpp)
 add_dependencies(example_set_predefined_effect ae_powerboard_control_generate_messages_cpp)
-add_dependencies(mav_colors mav_colors_cpp)
+add_dependencies(mav_colors mav_colors_cpp ${catkin_EXPORTED_TARGETS})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
